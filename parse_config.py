@@ -6,7 +6,8 @@ import sys
 import argparse
 
 
-    #checks for scans defined and creates a dictionary of the scan objects
+    
+#checks for scans defined and creates a dictionary of the scan objects
 def scan_bssids(self):
     all_scans = {}
 
@@ -17,10 +18,8 @@ def scan_bssids(self):
             scan_obj["name"] = i
             scan_obj["interface"] = self.network_interfaces[scan_profile["interface"]]
             scan_obj["profiles"] = self.SSIDs_for_profiles(scan_profile["profiles"])
-
             scan_obj["unknown_SSID_warning"] = scan_profile["unknown_SSID_warning"]
-            scan_obj["priority"] = scan_profile["priority"]
-            
+            scan_obj["priority"] = scan_profile["priority"]            
             scan_obj["meta"] = self.meta[scan_profile["meta_information"]]
         except:
             print("ERROR in retrieving \"BSSID_scans\"")

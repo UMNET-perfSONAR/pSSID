@@ -12,8 +12,8 @@ import signal
 import ssid_scan
 import connect_bssid
 import json
-import warnings
 import pika
+import traceback
 import psutil
 
 
@@ -29,21 +29,6 @@ child_exited = False
 DEBUG = args.debug
 
 
-
-def list_children():
-    current_process = psutil.Process()
-    children = current_process.children(recursive=True)
-
-
-    if not children:
-        print("NO CHILDREN")
-
-    for child in children:
-        print('Child pid is {}'.format(child.pid))
-
-
-
-
 def sigh(signum, frame):
     global child_exited
     global DEBUG
@@ -51,7 +36,12 @@ def sigh(signum, frame):
         exit(1)
 
     if signum == signal.SIGCHLD:
-        (pid, status) = os.waitpid(-1, 0)
+        try:
+            (pid, status) = os.waitpid(-1, 0)
+        except:
+            print("ERROR in sigh signal handler")
+            print(traceback.print_exc())
+
         child_exited = True
         if DEBUG:
             print ("(SIGCHLD) child exited with status: " + str(os.WEXITSTATUS(status)), pid)
@@ -79,8 +69,14 @@ def is_rogue(bssid, ssid_list):
 
 
 def channel_match(bssid, ssid):
-    if bssid["channel"] not in ssid["channels"]:
+    try:
+        if bssid["channel"] not in ssid["channels"]:
+            return False
+    except:
+        print("ERROR in channel_mismatch ", bssid, ssid)
+        print(traceback.print_exc())
         return False
+
     return True
 
 
@@ -97,7 +93,13 @@ def scan_qualify(bssid_list, ssid_list, unknown_SSID_warning):
         qualified_per_ssid[i["SSID"]] = 0
 
     for bssid in bssid_list:
-        bssid = json.loads(bssid)
+        try:
+            bssid = json.loads(bssid)
+        except:
+            print("ERROR in loading BSSID from bssid_list:", bssid_list)
+            print(traceback.print_exc())
+            return
+
         checked_bssid = {}
         checked_bssid["BSSID"] = bssid
         checked_bssid["rogue_ssid"] = False
@@ -108,12 +110,17 @@ def scan_qualify(bssid_list, ssid_list, unknown_SSID_warning):
         if rogue:
             checked_bssid["rogue_ssid"] = True
 
-            if bssid['ssid'] not in rogue_list:
-                rogue_list.append(bssid['ssid'])
+            try:
+                if bssid['ssid'] not in rogue_list:
+                    rogue_list.append(bssid['ssid'])
 
-                if unknown_SSID_warning:
-                    diagn = "Rogue SSID: " + bssid['ssid']
-                    #print(diagn, bssid)
+                    if unknown_SSID_warning:
+                        diagn = "Rogue SSID: " + bssid['ssid']
+                        #print(diagn, bssid)
+            except:
+                print("ERROR in adding SSID: %s to rogue_list" % bssid['ssid'])
+                print(traceback.print_exc())
+
         elif not channel_match(bssid, ret_ssid):
             checked_bssid["channel_mismatch"] = True
             if ret_ssid["channel_mismatch_warning"]:
@@ -188,14 +195,19 @@ def BSSID_qualify(bssid_list, ssid):
 
 
 def transform(main_obj, bssid):
-    transform = {}
-    transform["SSID"] = bssid["ssid"]
-    transform["BSSID"] = bssid["address"]
-    transform["ESSID"] = bssid["ssid"]
-    transform["task"] = main_obj["name"]
-    transform["signal"] = bssid["signal"]
-    transform["frequency"] = bssid["frequency"]
-    transform["meta"] = main_obj["meta"]
+    try:
+        transform = {}
+        transform["SSID"] = bssid["ssid"]
+        transform["BSSID"] = bssid["address"]
+        transform["ESSID"] = bssid["ssid"]
+        transform["task"] = main_obj["name"]
+        transform["signal"] = bssid["signal"]
+        transform["frequency"] = bssid["frequency"]
+        transform["meta"] = main_obj["meta"]
+    except:
+        print("ERROR in transform, returning empty archiver ", bssid, ssid)
+        print(traceback.print_exc())
+        return []
 
 
     #for syslog:
@@ -220,9 +232,7 @@ def transform(main_obj, bssid):
         
 
         new_list.append(i)
-        #print(i)
-
-    #print(script_str)
+        
 
     return new_list
 
@@ -230,23 +240,32 @@ def transform(main_obj, bssid):
 def debug(parsed_file, schedule):
     #print parsed objects
     tests(parsed_file)
+    #print initial queue
     schedule.print_queue()
 
 
 def retrieve(next_task):
-    return next_task.argument[0], \
-        next_task.argument[1], \
-        next_task.argument[2], \
-        next_task.argument[3]
+    try:
+        return next_task.argument[0], \
+            next_task.argument[1], \
+            next_task.argument[2], \
+            next_task.argument[3]
+    except:
+        print("ERROR in retrieving next_task arguments ")
+        print(traceback.print_exc())
 
 
 def rabbitmqQueue(message, queue_name ="", routing_key = "", exchange_name = ""):
-    
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    channel=connection.channel()
-    result=channel.queue_declare(queue=queue_name)
-    channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message)
-    connection.close()
+
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        channel=connection.channel()
+        result=channel.queue_declare(queue=queue_name)
+        channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message)
+        connection.close()
+    except:
+        print("ERROR in archiving with rabbitmqQueue")
+        print(traceback.print_exc())
 
 
 # read config file
@@ -256,19 +275,15 @@ config_file = open(args.file, "r")
 parsed_file = Parse(config_file)
 config_file.close()
 
-
-
+#creates a schedule object and does the initial scheduling
 schedule = Schedule(parsed_file)
 schedule.initial_schedule()
-
-
-
 
 def loop_forever():
    
     global child_exited
     global DEBUG
-    pid_child = 0
+    pid_child = 0    
     connect_ttl = 20
     task_ttl = 0
     computed_TTL = 0
@@ -302,8 +317,6 @@ def loop_forever():
 
             ssid_list = main_obj["profiles"]
 
-
-
             scanned_table = ssid_scan.get_all_bssids(main_obj["interface"])
 
             checked_bssid, qualified_per_ssid = scan_qualify(scanned_table, ssid_list, main_obj["unknown_SSID_warning"])
@@ -330,8 +343,6 @@ def loop_forever():
             rabbitmqQueue(message, "pSSID", "pSSID")
 
             schedule.reschedule(main_obj,cron, ssid, scan=True)
-
-
             next_task = schedule.get_queue[0]
             schedule.pop(next_task)
             main_obj, cron, ssid, scan = retrieve(next_task)

@@ -30,7 +30,7 @@ import pika
 
 
 # Turn this on to dump the JSON fetched during intermediate steps.
-VERBOSE = True
+VERBOSE = False
 
 
 
@@ -254,12 +254,12 @@ def main(TASK, o=False, s=False, q=False):
     except KeyError:
         fail("Server returned incomplete data.")
 
-    # if VERBOSE:
-    #     print
-    #     print
-    #     print "Task with server-added detail:"
-    #     print
-    #     print json_dump(task_data)
+    if VERBOSE:
+        print (" ")
+        print (" ")
+        print ("Task with server-added detail:")
+        print(" ")
+        print (json_dump(task_data))
 
 
     # -----------------------------------------------------------------------------
@@ -281,14 +281,12 @@ def main(TASK, o=False, s=False, q=False):
         if key not in run_data:
             fail("Server did not return %s with run data" % (key))
 
-    # print
-    # print "First run is", run_data["href"]
-
-    # if VERBOSE:
-    #     print
-    #     print "Data about first run:"
-    #     print
-    #     print json_dump(run_data)
+    
+    if VERBOSE:
+        print (" ")
+        print ("Data about first run:")
+        print (" ")
+        print (json_dump(run_data))
 
 
     # -----------------------------------------------------------------------------
@@ -329,12 +327,6 @@ def main(TASK, o=False, s=False, q=False):
     if status != 200:
         fail("Did not get a result: %s" % (result_data))
 
-    # print
-    # print
-    # print "JSON Result:"
-    # print
-    # print json_dump(result_data)
-
 
     # -----------------------------------------------------------------------------
 
@@ -358,11 +350,7 @@ def main(TASK, o=False, s=False, q=False):
     if status != 200:
         fail("Did not get a result: %s" % (result_text))
 
-    # print
-    # print
-    # print "Text-formatted result:"
-    # print
-    # print result_text
+
 
     if(o):
         #stdout print
