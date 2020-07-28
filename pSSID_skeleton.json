@@ -114,7 +114,7 @@
                 "UID": "fakeUID",
                 "Password": "fakepassword",
                 "connection_flags": {
-                    "paranoid": false,
+                    "paranoid": true,
                     "pscheduler_restart": false,
                     "apache_restart": false,
                     "postgres_restart": false,
