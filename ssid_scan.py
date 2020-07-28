@@ -38,7 +38,7 @@ def get_all_bssids(interface):
 
     syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, log_msg)
 
-    return wifi_list
+    return wifi_list, elapsed_time
 
 
 def print_ssid(interface, ssid):
