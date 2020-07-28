@@ -282,10 +282,10 @@ def loop_forever():
     schedule.pop(next_task)
     main_obj, cron, ssid, scan = retrieve(next_task)
 
+    print_task = "Next Task: " + time.ctime(next_task.time) + \
+                " main_obj: " + main_obj["name"]
+    syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, print_task)
     if DEBUG:
-        print("Next Task: ")
-        print_task = time.ctime(next_task.time) + \
-            " main_obj: " + main_obj["name"]
         print (print_task)
 
 
@@ -337,10 +337,10 @@ def loop_forever():
             schedule.pop(next_task)
             main_obj, cron, ssid, scan = retrieve(next_task)
 
+            print_task = "Next Task: " + time.ctime(next_task.time) + \
+                        " main_obj: " + main_obj["name"]
+            syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, print_task)
             if DEBUG:
-                print("Next Task: ")
-                print_task = time.ctime(next_task.time) + \
-                    " main_obj: " + main_obj["name"]
                 print (print_task)
 
             child_exited = False
@@ -380,6 +380,12 @@ def loop_forever():
             schedule.pop(next_task)
             main_obj, cron, ssid, scan = retrieve(next_task)
 
+            print_task = "Next Task: " + time.ctime(next_task.time) + \
+                        " main_obj: " + main_obj["name"]
+            syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, print_task)
+            if DEBUG:
+                print (print_task)
+
             if schedule.empty():
                 print("ERROR: this should never reach")
 
@@ -402,6 +408,12 @@ def loop_forever():
             next_task = schedule.get_queue[0]
             schedule.pop(next_task)
             main_obj, cron, ssid, scan = retrieve(next_task)
+
+            print_task = "Next Task: " + time.ctime(next_task.time) + \
+                        " main_obj: " + main_obj["name"]
+            syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, print_task)
+            if DEBUG:
+                print (print_task)
             continue
 
 
@@ -419,6 +431,8 @@ def loop_forever():
                     if DEBUG: print("Connect")
                     # Connect to bssid
                     connection_info = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]], ssid["AuthMethod"])
+                    
+                    connection_info = json.loads(connection_info)
                     connection_info["bssid_info"] = bssid
                     connection_info["meta"] = main_obj["meta"]
 
