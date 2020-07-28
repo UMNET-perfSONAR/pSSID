@@ -6,6 +6,10 @@ def validate_connect(address):
     output, err = p.communicate()
     rc = p.returncode
 
+    # Check for not connected return
+    if str(output) == "b''":
+        return False
+
     mac_address = str(output).split()[3]
     mac_address = mac_address[0:17]
 
