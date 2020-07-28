@@ -17,6 +17,7 @@ from ansible.plugins.callback import CallbackBase
 from ansible import context
 import ansible.constants as C
 import syslog
+import traceback
 
 
 DEBUG = False
@@ -229,8 +230,12 @@ def prepare_connection(ssid, bssid, interface, auth):
         connected = bssid_validator.validate_connect(bssid)
 
     # Get ip
-    ni.ifaddresses('wlan0')
-    ip = ni.ifaddresses('wlan0')[ni.AF_INET][0]['addr']
+    try:
+        ni.ifaddresses('wlan0')
+        ip = ni.ifaddresses('wlan0')[ni.AF_INET][0]['addr']
+    except:
+        print("ERROR in retrieving local ip", ssid, bssid, interface)
+        print(traceback.print_exc())
 
     connection_info = {}
     connection_info['ssid'] = ssid
