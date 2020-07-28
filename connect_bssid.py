@@ -50,9 +50,27 @@ def prepare_connection(ssid, bssid, interface, auth):
     syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, connect_msg)
 
     paranoid = False
+    pscheduler_restart = False
     apache_restart = False
     postgres_restart = False
     wait_time = 0
+
+
+    # Defaults can be changed by input object
+    if 'paranoid' in auth['connection_flags']:
+        paranoid = auth['connection_flags']['paranoid']
+
+    if 'pscheduler_restart' in auth['connection_flags']:
+        pscheduler_restart = auth['connection_flags']['pscheduler_restart']
+
+    if 'apache_restart' in auth['connection_flags']:
+        apache_restart = auth['connection_flags']['apache_restart']
+
+    if 'postgres_restart' in auth['connection_flags']:
+        postgres_restart = auth['connection_flags']['postgres_restart']
+
+    if 'wait_time' in auth['connection_flags']:
+        wait_time = auth['connection_flags']['wait_time']
 
     start_time = time.time()
 
@@ -63,7 +81,8 @@ def prepare_connection(ssid, bssid, interface, auth):
 
     elif auth['type'] == 'User':
         wpa_supp_path = '/etc/wpa_supplicant/wpa_supplicant_' + ssid + '.conf'
-        print('User auth')
+        if DEBUG:
+            print('User auth')
 
     # Format SSID and BSSID for wpa supplicant
     ssid_line = '    ssid="' + ssid + '"'
@@ -106,14 +125,14 @@ def prepare_connection(ssid, bssid, interface, auth):
                 
                 # Exit play if wpa_supplicant is not found
                 dict(action=dict(module='debug', msg='Could not find wpa_supplicant with given ssid'), when='not wpa_exists.stat.exists'),
-                #dict(action=dict(module='fail', msg='Could not find wpa_supplicant for given ssid'), when='not wpa_exists.stat.exists'),
+                dict(action=dict(module='fail', msg='Could not find wpa_supplicant for given ssid'), when='not wpa_exists.stat.exists'),
                 dict(action=dict(module='meta', args='end_play'), when='not wpa_exists.stat.exists'),
 
                 # Take down pscheduler services if in paranoid mode
-                dict(action=dict(module='systemd', name='pscheduler-archiver', state='stopped'), when=paranoid),
-                dict(action=dict(module='systemd', name='pscheduler-runner', state='stopped'), when=paranoid),
-                dict(action=dict(module='systemd', name='pscheduler-scheduler', state='stopped'), when=paranoid),
-                dict(action=dict(module='systemd', name='pscheduler-ticker', state='stopped'), when=paranoid),
+                dict(action=dict(module='systemd', name='pscheduler-archiver', state='stopped'), when=pscheduler_restart),
+                dict(action=dict(module='systemd', name='pscheduler-runner', state='stopped'), when=pscheduler_restart),
+                dict(action=dict(module='systemd', name='pscheduler-scheduler', state='stopped'), when=pscheduler_restart),
+                dict(action=dict(module='systemd', name='pscheduler-ticker', state='stopped'), when=pscheduler_restart),
 
                 # Stop apache if toggled
                 dict(action=dict(module='systemd', name='apache2', state='stopped'), when=apache_restart),
@@ -155,10 +174,10 @@ def prepare_connection(ssid, bssid, interface, auth):
                 dict(action=dict(module='command', args=dhclient)),
 
                 # Bring pScheduler services back
-                dict(action=dict(module='systemd', name='pscheduler-archiver', state='started'), when=paranoid),
-                dict(action=dict(module='systemd', name='pscheduler-runner', state='started'), when=paranoid),
-                dict(action=dict(module='systemd', name='pscheduler-scheduler', state='started'), when=paranoid),
-                dict(action=dict(module='systemd', name='pscheduler-ticker', state='started'), when=paranoid),
+                dict(action=dict(module='systemd', name='pscheduler-archiver', state='started'), when=pscheduler_restart),
+                dict(action=dict(module='systemd', name='pscheduler-runner', state='started'), when=pscheduler_restart),
+                dict(action=dict(module='systemd', name='pscheduler-scheduler', state='started'), when=pscheduler_restart),
+                dict(action=dict(module='systemd', name='pscheduler-ticker', state='started'), when=pscheduler_restart),
 
                 # Start apache if toggled
                 dict(action=dict(module='systemd', name='apache2', state='started'), when=apache_restart),
@@ -175,6 +194,7 @@ def prepare_connection(ssid, bssid, interface, auth):
     play = Play().load(play_source, variable_manager=variable_manager, loader=loader)
 
     # Run the playbook
+    connected = True
     tqm = None
     try:
         tqm = TaskQueueManager(
@@ -185,6 +205,8 @@ def prepare_connection(ssid, bssid, interface, auth):
                   stdout_callback=results_callback,  # Use our custom callback instead of the ``default`` callback plugin, which prints to stdout
               )
         result = tqm.run(play) # most interesting data for a play is actually sent to the callback's methods
+        if result != 0:
+            connected = False
     finally:
         # we always need to cleanup child procs and the structures we use to communicate with them
         if tqm is not None:
@@ -201,8 +223,10 @@ def prepare_connection(ssid, bssid, interface, auth):
     end_time = time.time()
     elapsed_time = end_time - start_time
 
+
     # Check if connection is successful
-    connected = bssid_validator.validate_connect(bssid)
+    if paranoid:
+        connected = bssid_validator.validate_connect(bssid)
 
     # Get ip
     ni.ifaddresses('wlan0')
