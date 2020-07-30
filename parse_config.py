@@ -6,9 +6,10 @@ import sys
 import argparse
 
 
-    
-#checks for scans defined and creates a dictionary of the scan objects
 def scan_bssids(self):
+    """
+    Parses the scan objects defined in config file
+    """
     all_scans = {}
 
     for i in self.BSSID_scans:
@@ -24,8 +25,6 @@ def scan_bssids(self):
         except:
             print("ERROR in retrieving \"BSSID_scans\"")
             print(traceback.print_exc())
-
-    
 
         try:
             cron_list = []
@@ -44,17 +43,17 @@ def scan_bssids(self):
 
     return all_scans
 
-#Parse:
-    #extracts the individual dictionaries 
-    #returns them:
-        #has the option of returning any specific dictionary or all at once
-    #creates and returns single task formatted for pScheduler given task info
-    #creates and returns single task formatted for pSSID given task info
-        #(with cron scheduler and SSID list)
-    #creates and returns list of all tasks from config file formatted for pSSID
-    #takes one argument: json configuration file
+
+
 
 class Parse:
+    """
+    -takes one argument: json configuration file
+    -Parses the individual dictionaries defined in config file  
+    -creates and returns single task formatted for pScheduler given task info
+    -creates and returns single task formatted for pSSID given task info  (with cron scheduler and SSID list)
+    -creates and returns list of all tasks from config file formatted for pSSID 
+    """
 
     def __init__(self, config_file):
         #psjson makes sure that it is a valid json file
@@ -71,7 +70,6 @@ class Parse:
             self.network_interfaces = json_obj["network_interfaces"]
             self.BSSID_scans = json_obj["BSSID_scans"]
             self.tasks = json_obj["tasks"]
-
             self.all_scans = scan_bssids(self)
 
 
@@ -81,15 +79,11 @@ class Parse:
 
 
 
-    #retuens the dicts in that order, to access individual see example tests below
-    def return_all(self):
-        return self.meta, self.archives, \
-        self.tests, self.schedules, self.tasks
-
-
-
-    #returns cron schedule list for a given task
+    
     def schedule_for_task(self,given_task):
+        """
+        returns cron schedule list for a given task
+        """
         try:
             cron_list = []
             schedlist = self.tasks[given_task]["schedule"]
@@ -113,8 +107,6 @@ class Parse:
                 ssidlist = profiles 
             else:
                 ssidlist = self.SSID_groups[profiles]
-
-            #print("ssidlist", ssidlist)
             
             for i in ssidlist:
                 ssid = self.SSID_profiles[i]
@@ -129,20 +121,25 @@ class Parse:
 
     
    
-    #option to get a pscheduler formatted for specific task
-    #running this function validates every key(archives,tests, etc) also valid
+
     def create_pScheduler_task(self, given_task, given_test):
+        """
+        returns a pscheduler formatted for specific task
+        running this function validates archives,tests
+        """
         #scheudle needs to be empty when sent to pScheduler
         taskobj = {
             "schema" : 1,
             "schedule": {}
         }
+
         #validate tests
         try:
             taskobj["test"]= self.tests[given_test]
         except:
             print("ERROR in retrieving \"test\" from", given_task, given_test)
-            print(traceback.print_exc())        
+            print(traceback.print_exc()) 
+
         #validate archives
         try:
             taskobj["archives"] = []
@@ -152,44 +149,35 @@ class Parse:
         except:
             print("ERROR in retrieving \"archives\" from", given_task)
             print(traceback.print_exc())
+
         return taskobj
 
 
     
-    # running this function validates SSIDs and schedule
-    # pSSID task object. Dict keys: TASK, Sched, SSIDS
-    # TASKS: contain formatted tasks for valid for pscheduler
-    # Sched: list of cron schedule info
-    # SSIDs: list of SSIDs associated with task
     def create_pSSID_task(self, given_task, given_test):
+        """
+        running this function validates SSIDs and schedule
+        TASK: contain formatted tasks for valid for pscheduler
+        Sched: list of cron schedule info
+        SSIDs: list of SSIDs associated with task
+        """
         taskobj = {}
         taskobj["name"] = given_test
         taskobj["TASK"] = self.create_pScheduler_task(given_task, given_test)
-
-        #Attaching schedule
         taskobj["schedule"] = self.schedule_for_task(given_task)
-
-        #Attaching SSIDs 
         taskobj["SSIDs"] = self.SSIDs_for_profiles(self.tasks[given_task]["profiles"])
-
-        #interface
         taskobj["interface"] = self.all_scans[self.tasks[given_task]["BSSIDs"]]
-
-        #TODO: priority
         taskobj["priority"] = self.tasks[given_task]["priority"]
-
         taskobj["BSSIDs"] = self.tasks[given_task]["BSSIDs"]
-
         taskobj["ttl"] = self.tasks[given_task]["ttl"]
-
         taskobj["meta"] = self.meta[self.tasks[given_task]["meta_information"]]
-
         return taskobj
 
-    
-
-    #option to return list of pSSID task objects. Dict keys: TASK, Sched, SSIDS
+   
     def pSSID_task_list(self):
+        """
+        option to return list of pSSID task objects. Dict keys: TASK, Sched, SSIDS
+        """
         TASKS = []
         for eachtask in self.tasks:
             for eachtest in self.tasks[eachtask]["test"]:
@@ -209,54 +197,27 @@ def tests(p):
     print("tests:", p.tests)
     print("schedules:", p.schedules)
     print("tasks:", p.tasks)
-
-
     print("BSSID_channels", p.BSSID_channels) 
     print("SSID_profiles", p.SSID_profiles)
     print("SSID_groups", p.SSID_groups) 
     print("newwork_interfaces", p.network_interfaces)
     print("BSSID_scans", p.BSSID_scans)
-
-    print
     print("all_scans", p.all_scans)
-
-
     print("SINGLE END")
-    print
-    print
-    print
 
     #pscheduler task
     psched = p.create_pScheduler_task("example_task_throughput", "example_test_throughput_ul")
     print(psched)
-    print
-    print
-    print
-
-
 
     #pSSID task
     pssid = p.create_pSSID_task("example_task_throughput", "example_test_throughput_ul")
     print(pssid)
-    print
-    print
-    print
 
     #task list
     print(p.pSSID_task_list())
-    print
-    print
-    print
-
-    #TODO XXX: more tests
 
 
 
-
-
-
-#sub-main for testing purposes
-#also serves as usage
 
 if __name__ == "__main__":
 
@@ -265,14 +226,10 @@ if __name__ == "__main__":
       help='json file')
     args = parser.parse_args()
 
-
     config_file = open(args.file, "r")
 
     p = Parse(config_file)
-    tests(p)    
-
-
-    
+    tests(p)   
 
     exit(0)
 

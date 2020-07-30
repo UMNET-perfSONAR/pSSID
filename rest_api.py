@@ -125,7 +125,7 @@ class PycURLRunner(object):
             status = self.curl.getinfo(pycurl.HTTP_CODE)	
             text = self.buf.getvalue()	
         except pycurl.error as ex:	
-            (code, message) = ex	
+            (_, message) = ex	
             status = 400	
             text = message	
         finally:	
@@ -258,7 +258,7 @@ def main(TASK, o=False, s=False, q=False):
         print (" ")
         print (" ")
         print ("Task with server-added detail:")
-        print(" ")
+        print (" ")
         print (json_dump(task_data))
 
 

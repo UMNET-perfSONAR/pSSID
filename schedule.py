@@ -16,7 +16,6 @@ count = 0
 def run_schedule(obj, cron, ssid, scan):
 	global count
 	count += 1
-	print
 	print("Main reached", count)
 	print ("NOW: %s" % time.ctime(time.time()))
 	print ("TASK: ", str(obj["name"]))
@@ -24,8 +23,6 @@ def run_schedule(obj, cron, ssid, scan):
 		print ("SSID: ", str(ssid["name"]))
 		print ("Result URL: ")
 		rest_api.main(obj["TASK"])
-
-	print
 
 
 
@@ -35,27 +32,19 @@ class Schedule:
 	def __init__(self, parsed_file):
 		self.p = parsed_file
 		self.s = sched.scheduler(time.time, time.sleep)
-
-
-	
-
 	
 	def reschedule(self,given_obj, given_cron, given_ssid = {}, given_time=time.time(), scan = False):
 		set_time = time.time()
 		if given_time > time.time():
 			set_time = given_time
 		
-		name = given_obj["name"]
 		schedule_time =  set_time  + given_cron.next(set_time)
-
 		self.s.enterabs(schedule_time, given_obj["priority"], run_schedule, argument = (given_obj,given_cron,given_ssid, scan))
 
 
-
-
-	#schedules for all tasks at the start
+	
 	def initial_schedule(self, given_time=time.time()):
-		SCANS = self.p.all_scans	#SCANS is a dict
+		SCANS = self.p.all_scans	
 		for eachscan in SCANS.values():
 			cron_list = eachscan["schedule"]
 			for eachcron in cron_list:
@@ -93,7 +82,7 @@ class Schedule:
 
 
 	def initial_print(self, given_time=time.time()):
-		#print self.s.queue
+		
 		print ("Now: %s" % time.ctime(time.time()))
 		print ("start: %s" % time.ctime(given_time))
 		
@@ -118,7 +107,7 @@ class Schedule:
 		end_time = given_time + duration
 
 		#create a custom dict where each task has additional
-		#attribut 'prev', previously scheduled time
+		#attribute 'prev', previously scheduled time
 
 		temp2 = []
 		for i in self.s.queue:
@@ -134,7 +123,6 @@ class Schedule:
 		while fake_time < end_time:
 			min_time = end_time
 			for test in temp2:
-
 				curr_time = test["prev"] + test["i"].argument[1].next(test["prev"])
 				test["prev"] = curr_time
 				min_time = min(min_time, curr_time)
@@ -244,11 +232,7 @@ def main():
 			print(traceback.print_exc())
 			exit(1)
 
-		time_given = True
-
-
-
-
+	
 	config_file = open(args.file, "r")
 	p = Parse(config_file)
 	s = Schedule(p)

@@ -6,8 +6,12 @@ from json import load, loads, dump, dumps
 import string
 import sys
 from io import IOBase
-#from psselect import polled_select
 
+
+def fail(message):
+    """Complain about a problem and exit."""
+    print (message)
+    exit(1)
 
 def json_decomment(json, prefix='#', null=False):
     """
@@ -108,20 +112,18 @@ def json_load(source=None, exit_on_error=False, strip=True, max_schema=None):
     """
     if source is None:
         source = sys.stdin
-	#unicode had to be changed to str for python3
     try:
-        if type(source) is str or type(source) is str:
+        if type(source) is str:
             json_in = loads(str(source))
         elif isinstance(source, IOBase):
             json_in = load(source)
         else:
             raise Exception("Internal error: bad source type ", type(source))
     except ValueError as ex:
-        # TODO: Make this consistent and fix scripts that use it.
         if type(source) is str or not exit_on_error:
             raise ValueError("Invalid JSON: " + str(ex))
         else:
-            pscheduler.fail("Invalid JSON: " + str(ex))
+            fail("Invalid JSON: " + str(ex))
 
     if max_schema is not None:
         json_check_schema(json_in, max_schema)
@@ -135,9 +137,6 @@ def json_dump(obj, dest=None, pretty=False):
     If no destination is specified, it will be returned as a string.
     If the blob is None, a JSON 'null' will be returned.
     """
-
-    # TODO: Make the use of dump/dumps less repetitive
-
     # Return a string
     if dest is None:
         if pretty:

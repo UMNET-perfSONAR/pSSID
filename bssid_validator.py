@@ -3,8 +3,7 @@ import subprocess
 def validate_connect(address):
     p = subprocess.Popen(['iwgetid', '-a'], stdout=subprocess.PIPE)
 
-    output, err = p.communicate()
-    rc = p.returncode
+    output,_= p.communicate()
 
     # Check for not connected return
     if str(output) == "b''":
