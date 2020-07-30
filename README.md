@@ -26,25 +26,19 @@ git clone https://github.com/UMNET-perfSONAR/ansible-playbook-pSSID.git
 cd ansible-playbook-pSSID
 ```
 
-Clone this inventory in the playbook dir:
-```
-git clone https://github.com/UMNET-perfSONAR/ansible-inventory-pssid-template.git
-```
+If you have your own inventory, clone this inventory in the playbook dir at this point
+
 
 Get the required roles (ignore errors so we can run this multiple times):
 
 ```
 ansible-galaxy install -r requirements.yml --ignore-errors
-ansible-galaxy install \
-  -r ansible-inventory-pssid-template/requirements.yml\
-  --ignore-errors
 ```
 
 Define testpoints, add ip address of the testpoint under [pSSID-testpoints]:
 
 ```
-cd ansible-inventory-pssid-template/inventory/host_vars
-vi hosts
+vi inventory/hosts
 ```
 
 Regular provisioning:
@@ -55,7 +49,7 @@ Use Ansible ping to verify connectivity to targets:
 ansible all \
   --ask-become-pass \
   --become-method su \
-  -i ansible-inventory-pssid-template/inventory \
+  -i inventory \
   -m ping
 ```
 
@@ -65,24 +59,8 @@ Run the playbook:
 ansible-playbook \
   --ask-pass \
   --ask-become-pass \
-  --ask-vault-pass  \
-  -i ansible-inventory-pssid-template/inventory \
+  -i inventory \
   pSSID.yml
 ```
 
-- Bootstrap local playbook
 
-```
-ansible-galaxy install \
-  -r  ansible-inventory-pssid-template/requirements.yml \
-  --ignore-errors
-```
-
- - Run local playbook
-
-```
-ansible-playbook \
-  --ask-pass \
-  --ask-become-pass  \
-  -i ansible-inventory-pssid-template/inventory \
-  ansible-inventory-pssid-template/playbooks/miserver.yml
