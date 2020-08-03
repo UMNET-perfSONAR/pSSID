@@ -50,6 +50,7 @@ def sigh(signum, frame):
         try:
             (pid, status) = os.waitpid(-1, 0)
         except:
+            print(time.ctime(time.time()))
             print("ERROR in sigh signal handler")
             print(traceback.print_exc())
 
@@ -89,7 +90,6 @@ def channel_match(bssid, ssid):
     return True
 
 
-
 def scan_qualify(bssid_list, ssid_list, unknown_SSID_warning):
     qualified_per_ssid = {}
     return_obj = []
@@ -101,6 +101,7 @@ def scan_qualify(bssid_list, ssid_list, unknown_SSID_warning):
         try:
             bssid = json.loads(bssid)
         except:
+            print(time.ctime(time.time()))
             print("ERROR in loading BSSID from bssid_list:", bssid_list)
             print(traceback.print_exc())
             return
@@ -131,9 +132,6 @@ def scan_qualify(bssid_list, ssid_list, unknown_SSID_warning):
 
 
     return return_obj, qualified_per_ssid
-
-
-
 
 
 def single_BSSID_qualify(bssid, ssid):
@@ -176,7 +174,6 @@ def BSSID_qualify(bssid_list, ssid):
     return qualified_bssids
 
 
-
 def transform(main_obj, bssid):
     try:
         transform = {}
@@ -188,6 +185,7 @@ def transform(main_obj, bssid):
         transform["frequency"] = bssid["frequency"]
         transform["meta"] = main_obj["meta"]
     except:
+        print(time.ctime(time.time()))
         print("ERROR in transform, returning empty archiver ", bssid)
         print(traceback.print_exc())
         return []
@@ -234,6 +232,7 @@ def rabbitmqQueue(message, queue_name ="", routing_key = "", exchange_name = "")
         channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message)
         connection.close()
     except:
+        print(time.ctime(time.time()))
         print("ERROR in archiving with rabbitmqQueue")
         print(traceback.print_exc())
 
@@ -250,42 +249,6 @@ def retrieve(next_task):
         print(traceback.print_exc())
 
 
-def run_pscheduler(main_obj, dest, bssid):
-    if "dest" not in main_obj["TASK"]["test"]["spec"].keys():
-        main_obj["TASK"]["test"]["spec"]["dest"] = dest
-
-    main_obj["TASK"]["archives"] = transform(main_obj, bssid)
-    pSched_task = main_obj["TASK"]
-    try:
-        rest_api.main(pSched_task)
-    except:
-        print("ERROR in running test with pscheduler", main_obj["name"], bssid["ssid"])
-        print(traceback.print_exc())
-
-
-
-def run_child(bssid_list, main_obj, ssid, interface):
-    for item in bssid_list[main_obj["BSSIDs"]]:
-        bssid = item["BSSID"]
-        if single_BSSID_qualify(bssid, ssid):
-            if DEBUG: print("Connect")
-            # Connect to bssid
-            connection_info = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]], ssid["AuthMethod"])
-            
-            connection_info = json.loads(connection_info)
-            connection_info["bssid_info"] = bssid
-            connection_info["meta"] = main_obj["meta"]
-
-            rabbitmqQueue(json.dumps(connection_info), "pSSID", "pSSID")
-
-            #if connection fails, it won't run any test
-            if connection_info["connected"]:
-                run_pscheduler(main_obj, connection_info["new_ip"], bssid)
-            elif DEBUG: 
-                print("Connection Failed")
-
-
-
 def reschedule(main_obj, cron, ssid, scan=False):
     schedule.reschedule(main_obj,cron, ssid, scan=scan)
     if DEBUG:
@@ -294,7 +257,6 @@ def reschedule(main_obj, cron, ssid, scan=False):
     next_task = schedule.get_queue[0]
     schedule.pop(next_task)
     return next_task
-
 
 
 def print_task_info(main_obj, next_task):
@@ -337,6 +299,40 @@ def run_scan(next_task, main_obj):
     
     return scanned_table, checked_bssid, main_obj["interface"]
 
+
+def run_pscheduler(main_obj, dest, bssid):
+    if "dest" not in main_obj["TASK"]["test"]["spec"].keys():
+        main_obj["TASK"]["test"]["spec"]["dest"] = dest
+
+    main_obj["TASK"]["archives"] = transform(main_obj, bssid)
+    pSched_task = main_obj["TASK"]
+    try:
+        rest_api.main(pSched_task)
+    except:
+        print(time.ctime(time.time()))
+        print("ERROR in running test with pscheduler", main_obj["name"], bssid["ssid"])
+        print(traceback.print_exc())
+
+
+def run_child(bssid_list, main_obj, ssid, interface):
+    for item in bssid_list[main_obj["BSSIDs"]]:
+        bssid = item["BSSID"]
+        if single_BSSID_qualify(bssid, ssid):
+            if DEBUG: print("Connect")
+            # Connect to bssid
+            connection_info = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]], ssid["AuthMethod"])
+            
+            connection_info = json.loads(connection_info)
+            connection_info["bssid_info"] = bssid
+            connection_info["meta"] = main_obj["meta"]
+
+            rabbitmqQueue(json.dumps(connection_info), "pSSID", "pSSID")
+
+            #if connection fails, it won't run any test
+            if connection_info["connected"]:
+                run_pscheduler(main_obj, connection_info["new_ip"], bssid)
+            elif DEBUG: 
+                print("Connection Failed")
 
 
 def loop_forever():
@@ -386,7 +382,8 @@ def loop_forever():
                 try:
                     os.wait()
                 except:
-                    if DEBUG: print("CHILD DEAD")
+                    print(time.ctime(time.time()))
+                    print("CHILD DEAD")
             else:
                 child_exited = False
 
@@ -424,9 +421,6 @@ def loop_forever():
             run_child(bssid_list, main_obj, ssid, interface)
 
             exit(0)
-
-
-
 
 
 
