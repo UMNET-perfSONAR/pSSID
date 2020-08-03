@@ -3,10 +3,10 @@ Implement ssid scanner with the wifi library
 Uses iwlist and must be run as root
 """
 
-from wifi import Cell, Scheme
 import json
 import syslog
 import time
+from wifi import Cell
 
 
 def get_all_bssids(interface):
@@ -57,4 +57,3 @@ def print_ssid(interface, ssid):
 
     for entry in ssid_list:
         print(entry)
-
