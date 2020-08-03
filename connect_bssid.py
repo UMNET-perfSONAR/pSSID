@@ -230,12 +230,10 @@ def prepare_connection(ssid, bssid, interface, auth):
         connected = bssid_validator.validate_connect(bssid)
 
     # Get ip
-    try:
-        ni.ifaddresses('wlan0')
-        ip = ni.ifaddresses('wlan0')[ni.AF_INET][0]['addr']
-    except:
-        print("ERROR in retrieving local ip", ssid, bssid, interface)
-        print(traceback.print_exc())
+    
+    ni.ifaddresses('wlan0')
+    ip = ni.ifaddresses('wlan0')[ni.AF_INET][0]['addr']
+    
 
     connection_info = {}
     connection_info['ssid'] = ssid
