@@ -116,8 +116,8 @@ def prepare_connection(ssid, bssid, interface, auth):
     # since the API is constructed for CLI it expects certain options
     # to always be set in the context object
     context.CLIARGS = ImmutableDict(connection='local', \
-            module_path=['/to/mymodules'], forks=10, become=None, \
-            become_method=None, become_user=None, check=False, diff=False)
+            module_path=['/to/mymodules'], forks=10, become='yes', \
+            become_method='su', become_user=None, check=False, diff=False)
 
     # initialize needed objects
     loader = DataLoader()
