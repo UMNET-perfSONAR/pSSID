@@ -46,7 +46,7 @@ def print_ssid(interface, ssid):
     Scan on the given interface
     Return a list of all bssids with the given ssid
     """
-    all_bssids = get_all_bssids(interface)
+    all_bssids, elapsed_time = get_all_bssids(interface)
     ssid_list = []
 
     # Check complete list for matching ssids
