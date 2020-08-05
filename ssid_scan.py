@@ -4,6 +4,7 @@ Uses iwlist and must be run as root
 """
 
 import json
+import sys
 import syslog
 import time
 from wifi import Cell
@@ -57,3 +58,8 @@ def print_ssid(interface, ssid):
 
     for entry in ssid_list:
         print(entry)
+
+
+if __name__ == "__main__":
+    print_ssid(sys.argv[1], sys.argv[2])
+    exit(0)
