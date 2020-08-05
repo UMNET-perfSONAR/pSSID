@@ -6,6 +6,8 @@ import json
 import shutil
 import time
 import syslog
+import sys
+import argparse
 import netifaces as ni
 
 import ansible.constants as C
@@ -73,6 +75,22 @@ def set_flags(auth):
         }
 
     return flags
+
+
+def test_connection(ssid, bssid, interface):
+    """
+    Start connection attempt after command line call
+    Take in arguments on the command line
+    """
+    AuthMethod = { "type": "User", "UID": "fakeUID", "Password": "fakePassword",\
+            "connection_flags": {
+                        "paranoid": False,
+                        "pscheduler_restart": False,
+                        "apache_restart": False,
+                        "postgres_restart": False,
+                        "wait_time": 0 }
+            }
+    prepare_connection(ssid, bssid, interface, AuthMethod)
 
 
 def prepare_connection(ssid, bssid, interface, auth):
@@ -290,3 +308,8 @@ def prepare_connection(ssid, bssid, interface, auth):
         syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, log_msg)
 
     return json_info
+
+
+if __name__ == "__main__":
+    test_connection(sys.argv[1], sys.argv[2], sys.argv[3])
+    exit(0)
