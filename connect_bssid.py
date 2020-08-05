@@ -171,6 +171,9 @@ def prepare_connection(ssid, bssid, interface, auth):
             dict(action=dict(module='systemd', name='postgresql',\
                     state='stopped'), when=flags['postgres_restart']),
 
+            # Kill dhclient
+            dict(action=dict(module='command', args='killall dhclient'), ignore_errors='yes'),
+
             # Remove default route to make dhclient happy
             dict(action=dict(module='command', args='ip route del default'),\
                     ignore_errors='yes'),
@@ -182,9 +185,6 @@ def prepare_connection(ssid, bssid, interface, auth):
             # Kill wpa_supplicant
             dict(action=dict(module='command', args='killall wpa_supplicant'),\
                     ignore_errors='yes'),
-
-            # Kill dhclient
-            #dict(action=dict(module='command', args='killall dhclient'), ignore_errors='yes'),
 
             # Bring WiFi interface down
             dict(action=dict(module='command', args=bring_down)),
