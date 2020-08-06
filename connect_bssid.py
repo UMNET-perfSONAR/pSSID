@@ -6,7 +6,6 @@ import json
 import shutil
 import time
 import syslog
-import sys
 import argparse
 import netifaces as ni
 
@@ -190,7 +189,8 @@ def prepare_connection(ssid, bssid, interface, auth):
                     state='stopped'), when=flags['postgres_restart']),
 
             # Kill dhclient
-            dict(action=dict(module='command', args='killall dhclient'), ignore_errors='yes'),
+            dict(action=dict(module='command', args='killall dhclient'), \
+                    ignore_errors='yes'),
 
             # Remove default route to make dhclient happy
             dict(action=dict(module='command', args='ip route del default'),\
@@ -311,5 +311,13 @@ def prepare_connection(ssid, bssid, interface, auth):
 
 
 if __name__ == "__main__":
-    test_connection(sys.argv[1], sys.argv[2], sys.argv[3])
+    parser = argparse.ArgumentParser(description = 'Connect')
+    parser.add_argument('ssid', help='Enter ssid to connect to')
+    parser.add_argument('bssid', \
+            help='Enter bssid in format 00:11:22:33:44:55:66')
+    parser.add_argument('interface', \
+            help='Enter interface of wireless. Ex wlan0')
+    args = parser.parse_args()
+    test_connection(args.ssid, args.bssid, args.interface)
     exit(0)
+
