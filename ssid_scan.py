@@ -4,8 +4,8 @@ Uses iwlist and must be run as root
 """
 
 import json
-import sys
 import syslog
+import argparse
 import time
 from wifi import Cell
 
@@ -61,5 +61,9 @@ def print_ssid(interface, ssid):
 
 
 if __name__ == "__main__":
-    print_ssid(sys.argv[1], sys.argv[2])
+    parser = argparse.ArgumentParser(description = 'Scan')
+    parser.add_argument('interface', help='Enter interface to scan on')
+    parser.add_argument('ssid', help='Enter ssid to filter out')
+    args = parser.parse_args()
+    print_ssid(args.interface, args.ssid)
     exit(0)
