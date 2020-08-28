@@ -87,7 +87,7 @@
             "channel_mismatch_warning": true,
             "channel_mismatch_connect": false,
             "min_signal": -73,
-            "min_qualifying": 5,
+            "min_qualifying": 5, 
             "AuthMethod": {
                 "type": "User",
                 "UID": "fakeUID",
@@ -164,7 +164,8 @@
             "schedule": [ "schedule_every_4_hours", "schedule_Tuesday_10:10AM" ],
             "priority": 2,
             "ttl": 60,
-            "meta_information": "probe_stats"
+            "meta_information": "probe_stats",            
+            "throughput_threshold": 95000000
         }
     }
 }

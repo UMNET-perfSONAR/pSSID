@@ -281,8 +281,13 @@ def run_scan(next_task, main_obj):
     bssid_list = {}
     bssid_list["meta"] = main_obj["meta"]
     bssid_list["operation"] = "scan"
-    bssid_list["duration"] = scan_duration
-    bssid_list["SSID_bad_coverage"] = []
+    bssid_list["duration"] = scan_duration    
+    bssid_list[main_obj["name"]] = checked_bssid
+
+    bad_coverage = {}
+    bad_coverage["operation"] = "coverage"
+    bad_coverage["meta"] = main_obj["meta"]
+    bad_coverage["SSID_bad_coverage"] = []
 
     for j in ssid_list:
         if qualified_per_ssid[j["SSID"]] < j["min_qualifying"]:
@@ -291,10 +296,10 @@ def run_scan(next_task, main_obj):
             obj["min_qualifying_BSSID"] = j["min_qualifying"]
             obj["min_signal"] = j["min_signal"]
             obj["qualified_BSSIDs"] = qualified_per_ssid[j["SSID"]]
-            bssid_list["SSID_bad_coverage"].append(obj)
+            bad_coverage["SSID_bad_coverage"].append(obj)
 
-    bssid_list[main_obj["name"]] = checked_bssid
     rabbitmqQueue(json.dumps(bssid_list), "pSSID", "pSSID")
+    rabbitmqQueue(json.dumps(bad_coverage), "pSSID", "pSSID")
     
     
     return scanned_table, checked_bssid, main_obj["interface"]
