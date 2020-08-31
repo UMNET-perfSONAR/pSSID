@@ -34,7 +34,7 @@
         "example_test_latency": {
             "type": "latency",
             "spec": {
-                "source": "perfsonar-bin-arbl.umnet.umich.edu"
+                "dest": "perfsonar-bin-arbl.umnet.umich.edu"
             }
         },
         "example_test_throughput_ul": {
@@ -42,37 +42,69 @@
             "spec": {
                 "dest": "perfsonar-bin-arbl.umnet.umich.edu"
             }
-	},
+	    },
         "example_test_throughput_dl": {
             "type": "throughput",
             "spec": {
                 "source": "perfsonar-bin-arbl.umnet.umich.edu"
             }
+        },
+        "example_test_http_umich":{
+            "type": "http",
+            "spec": {
+                "url": "http://umich.edu"
+            }
+        },
+        "example_test_http_google":{
+            "type": "http",
+            "spec": {
+                "url": "http://google.com"
+            }
+        },
+        "example_test_dns_a":{
+            "type": "dns",
+            "spec": {
+                "query": "www.umich.edu",
+                "record": "a"
+            }
+        },
+        "example_test_dns_aaaa":{
+            "type": "dns",
+            "spec": {
+                "query": "www.umich.edu",
+                "record": "aaaa"
+            }
         }
     },
 
     "schedules": {
-        "schedule_every_4_hours": {
-            "repeat": "0 */4 * * *"
-        },
         "schedule_every_1_min": {
             "repeat": "*/1 * * * *"
-        },   
+        },
+        "schedule_every_5_min": {
+            "repeat": "*/5 * * * *"
+        },
+        "schedule_every_10_min": {
+            "repeat": "*/10 * * * *"
+        },
         "schedule_every_1_hour": {
             "repeat": "0 * * * *"
-        },   
+        }, 
+        "schedule_every_2_hours": {
+            "repeat": "0 */2 * * *"
+        },
+        "schedule_every_4_hours": {
+            "repeat": "0 */4 * * *"
+        }, 
+        "schedule_every_5_hours": {
+            "repeat": "0 */5 * * *"
+        },  
         "schedule_Tuesday_10AM": {
             "repeat": "0 10 * * 2"
         },   
         "schedule_Tuesday_10:10AM": {
             "repeat": "10 10 * * 2"
-        },   
-        "schedule_every_10_min": {
-            "repeat": "*/10 * * * *"
-        },
-        "schedule_every_5_min": {
-            "repeat": "*/5 * * * *"
-        }
+        }        
     },
 
     "BSSID_channels": {
@@ -155,7 +187,6 @@
             "ttl": 45,
             "meta_information": "probe_stats"
         },
-
         "example_task_throughput": {
             "profiles": "all_profiles",
             "BSSIDs": "primary_BSSIDs",
@@ -166,6 +197,36 @@
             "ttl": 60,
             "meta_information": "probe_stats",            
             "throughput_threshold": 95000000
+        },
+        "example_task_latency": {
+            "profiles": "all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "test": [ "example_test_latency" ],
+            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
+            "schedule": [ "schedule_every_5_hours"],
+            "priority": 4,
+            "ttl": 60,
+            "meta_information": "probe_stats"
+        },
+        "example_task_http": {
+            "profiles": "all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "test": [ "example_test_http_umich", "example_test_http_google" ],
+            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
+            "schedule": [ "schedule_every_2_hours"],
+            "priority": 5,
+            "ttl": 60,
+            "meta_information": "probe_stats"
+        },
+        "example_task_dns": {
+            "profiles": "all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "test": [ "example_test_dns_a", "example_test_dns_aaaa" ],
+            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
+            "schedule": [ "schedule_every_1_hour"],
+            "priority": 6,
+            "ttl": 60,
+            "meta_information": "probe_stats"
         }
     }
 }

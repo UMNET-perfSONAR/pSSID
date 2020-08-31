@@ -162,6 +162,7 @@ class Parse:
         SSIDs: list of SSIDs associated with task
         """
         taskobj = {}
+        taskobj["throughput"] = False
         taskobj["name"] = given_test
         taskobj["TASK"] = self.create_pScheduler_task(given_task, given_test)
         taskobj["schedule"] = self.schedule_for_task(given_task)
@@ -171,6 +172,11 @@ class Parse:
         taskobj["BSSIDs"] = self.tasks[given_task]["BSSIDs"]
         taskobj["ttl"] = self.tasks[given_task]["ttl"]
         taskobj["meta"] = self.meta[self.tasks[given_task]["meta_information"]]
+
+        if "throughput_threshold" in self.tasks[given_task]:
+            taskobj["throughput"] = True
+            taskobj["throughput_threshold"] = self.tasks[given_task]["throughput_threshold"]
+
         return taskobj
 
    

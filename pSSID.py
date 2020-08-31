@@ -184,6 +184,8 @@ def transform(main_obj, bssid):
         transform["signal"] = bssid["signal"]
         transform["frequency"] = bssid["frequency"]
         transform["meta"] = main_obj["meta"]
+        if main_obj["throughput"]:
+            transform["throughput_threshold"] = main_obj["throughput_threshold"]
     except:
         print(time.ctime(time.time()))
         print("ERROR in transform, returning empty archiver ", bssid)
