@@ -1,0 +1,173 @@
+{
+    "meta_information":{
+        "probe_stats": {
+    	    "probe_name": "{{probe_name}}",
+    	    "probe_location": "{{probe_location}}"
+    	}
+    },
+	
+
+    "archives": {
+        "example_rabbitmq_archive": {
+            "archiver": "rabbitmq",
+            "data": {
+                "_url": "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu",
+                "routing-key": "pscheduler_raw"                
+            }
+        },
+        "example_syslog_archive": {
+            "archiver": "syslog",
+            "data": {
+                "ident": "pSSID22 result",
+                "facility" : "local3"
+            }
+        }
+    },
+
+    "tests": {
+    {% for i in tests%}
+    "{{i.name}}":{
+            "type": "{{i.type}}",
+            "spec": {
+            {% if i.dest %}
+                "dest": "{{i.dest}}"
+            {% endif %}
+            }
+        },
+    {% endfor %}
+    },
+
+    "schedules": {
+        "schedule_every_1_min": {
+            "repeat": "*/1 * * * *"
+        },
+        "schedule_every_5_min": {
+            "repeat": "*/5 * * * *"
+        },
+        "schedule_every_10_min": {
+            "repeat": "*/10 * * * *"
+        },
+        "schedule_every_1_hour": {
+            "repeat": "0 * * * *"
+        }, 
+        "schedule_every_2_hours": {
+            "repeat": "0 */2 * * *"
+        },
+        "schedule_every_4_hours": {
+            "repeat": "0 */4 * * *"
+        }, 
+        "schedule_every_5_hours": {
+            "repeat": "0 */5 * * *"
+        },  
+        "schedule_Tuesday_10AM": {
+            "repeat": "0 10 * * 2"
+        },   
+        "schedule_Tuesday_10:10AM": {
+            "repeat": "10 10 * * 2"
+        }        
+    },
+
+    "BSSID_channels": {
+    	"EduRoam_channels": [ 11, 12, 13, 14, 15 ],
+    	"MWireless_channels": [ 1, 2, 3, 4, 5, 10, 64, 11, 44, 36 ]
+    },
+
+    "SSID_profiles" : {
+    {% for i in SSID%}
+    "{{i.name}}":{
+            "SSID": "{{i.SSID}}",
+            "channels": "{{i.channels}}",
+            "channel_mismatch_warning": {{i.channel_mismatch_warning}},
+            "channel_mismatch_connect": {{i.channel_mismatch_connect}},
+            "min_signal": {{i.min_signal}},
+            "min_qualifying": {{i.min_qualifying}}, 
+            "AuthMethod": {
+                "type": "{{i.type}}",
+                "UID": "{{i.UID}}",
+                "Password": "{{i.Password}}",
+                "connection_flags": {
+                    "paranoid": {{i.paranoid}},
+                    "pscheduler_restart": {{i.pscheduler_restart}},
+                    "apache_restart": {{i.apache_restart}},
+                    "postgres_restart": {{i.postgres_restart}},
+                    "wait_time": {{i.wait_time}}
+                }
+            }
+        },
+    {% endfor %}
+    },
+
+    "SSID_groups": {
+	   "all_profiles": ["EduRoam_profile", "MWireless_profile"]
+    },
+
+    "network_interfaces": {
+    	"primary_network_interface": "wlan0",
+    	"future_network_interface": "wlan1"
+    },
+
+    "BSSID_scans" : {
+    	"primary_BSSIDs": {
+    	    "interface": "primary_network_interface",
+    	    "profiles": "all_profiles",
+    	    "unknown_SSID_warning": true,
+    	    "schedule": [ "schedule_every_5_min" ],
+    	    "priority": 1,
+            "meta_information": "probe_stats"
+    	}
+    },
+
+    "tasks": {
+        "example_task_rtt": {
+            "profiles": ["MWireless_profile"],
+            "BSSIDs": "primary_BSSIDs",
+            "test": [ "example_test_rtt" ],
+            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
+            "schedule": [ "schedule_every_1_hour", "schedule_Tuesday_10:10AM" ],
+            "priority": 3,
+            "ttl": 45,
+            "meta_information": "probe_stats"
+        },
+        "example_task_throughput": {
+            "profiles": "all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "test": [ "example_test_throughput_ul", "example_test_throughput_dl" ],
+            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
+            "schedule": [ "schedule_every_4_hours", "schedule_Tuesday_10:10AM" ],
+            "priority": 2,
+            "ttl": 60,
+            "meta_information": "probe_stats",            
+            "throughput_threshold": 95000000
+        },
+        "example_task_latency": {
+            "profiles": "all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "test": [ "example_test_latency" ],
+            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
+            "schedule": [ "schedule_every_5_hours"],
+            "priority": 4,
+            "ttl": 60,
+            "meta_information": "probe_stats"
+        },
+        "example_task_http": {
+            "profiles": "all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "test": [ "example_test_http_umich", "example_test_http_google" ],
+            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
+            "schedule": [ "schedule_every_2_hours"],
+            "priority": 5,
+            "ttl": 60,
+            "meta_information": "probe_stats"
+        },
+        "example_task_dns": {
+            "profiles": "all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "test": [ "example_test_dns_a", "example_test_dns_aaaa" ],
+            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
+            "schedule": [ "schedule_every_1_hour"],
+            "priority": 6,
+            "ttl": 60,
+            "meta_information": "probe_stats"
+        }
+    }
+}
