@@ -150,9 +150,9 @@
         wait_time: 0
       },
       {
-        name: "Eduroam_profile",
+        name: "EduRoam_profile",
         SSID: "eduroam",
-        channels: "Eduroam_channels",
+        channels: "EduRoam_channels",
         channel_mismatch_warning: "true",
         channel_mismatch_connect: "false",
         min_signal: -65,
