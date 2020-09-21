@@ -1,80 +1,64 @@
 {
-    "meta_information":{
+    "meta_information": {
         "probe_stats": {
-    	    "probe_name": "{{probe_name}}",
-    	    "probe_location": "{{probe_location}}"
-    	}
-    },
-	
-
-    "archives": {
-        "example_rabbitmq_archive": {
-            "archiver": "rabbitmq",
-            "data": {
-                "_url": "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu",
-                "routing-key": "pscheduler_raw"                
-            }
-        },
-        "example_syslog_archive": {
-            "archiver": "syslog",
-            "data": {
-                "ident": "pSSID22 result",
-                "facility" : "local3"
-            }
+            "probe_name": "{{probe_name}}",
+            "probe_location": "{{probe_location}}"
         }
     },
+    
+
+    "archives": {
+    {% for i in archives %}
+    "{{i.name}}": {
+            "archiver": "{{i.archiver}}",
+            "data": {
+                {% for j,k in i.data.items() -%}
+                "{{j}}": "{{k}}"{{ "," if not loop.last else "" }}
+                {% endfor -%}
+
+            }
+        }{{ "," if not loop.last else ""}}
+    {% endfor %} 
+    },
+
 
     "tests": {
-    {% for i in tests%}
-    "{{i.name}}":{
+    {% for i in tests %}
+    "{{i.name}}": {
             "type": "{{i.type}}",
             "spec": {
-            {% if i.dest %}
-                "dest": "{{i.dest}}"
-            {% endif %}
+                {% for j,k in i.spec.items() -%}
+                "{{j}}": "{{k}}"{{ "," if not loop.last else "" }}
+                {% endfor -%}
+
             }
-        },
+        }{{ "," if not loop.last else ""}}
     {% endfor %}
+
     },
+
 
     "schedules": {
-        "schedule_every_1_min": {
-            "repeat": "*/1 * * * *"
-        },
-        "schedule_every_5_min": {
-            "repeat": "*/5 * * * *"
-        },
-        "schedule_every_10_min": {
-            "repeat": "*/10 * * * *"
-        },
-        "schedule_every_1_hour": {
-            "repeat": "0 * * * *"
-        }, 
-        "schedule_every_2_hours": {
-            "repeat": "0 */2 * * *"
-        },
-        "schedule_every_4_hours": {
-            "repeat": "0 */4 * * *"
-        }, 
-        "schedule_every_5_hours": {
-            "repeat": "0 */5 * * *"
-        },  
-        "schedule_Tuesday_10AM": {
-            "repeat": "0 10 * * 2"
-        },   
-        "schedule_Tuesday_10:10AM": {
-            "repeat": "10 10 * * 2"
-        }        
+    {% for i in schedules %}
+    "{{i.name}}": {
+            "repeat": "{{i.repeat}}"
+        }{{ "," if not loop.last else ""}}
+    {% endfor %}
+
     },
+
 
     "BSSID_channels": {
-    	"EduRoam_channels": [ 11, 12, 13, 14, 15 ],
-    	"MWireless_channels": [ 1, 2, 3, 4, 5, 10, 64, 11, 44, 36 ]
+    {% for i in BSSID_channels %}
+    "{{i.name}}": {{i.channels}}{{ "," if not loop.last else ""}}
+    {% endfor %}
+
     },
 
+
     "SSID_profiles" : {
-    {% for i in SSID%}
-    "{{i.name}}":{
+    {% for i in SSID %}
+    "{{i.name}}": {
             "SSID": "{{i.SSID}}",
             "channels": "{{i.channels}}",
             "channel_mismatch_warning": {{i.channel_mismatch_warning}},
@@ -93,81 +77,93 @@
                     "wait_time": {{i.wait_time}}
                 }
             }
-        },
+        }{{ "," if not loop.last else ""}}
     {% endfor %}
+
     },
+
 
     "SSID_groups": {
-	   "all_profiles": ["EduRoam_profile", "MWireless_profile"]
+    {% for i in SSID_groups %}
+    "{{i.name}}": [
+        {%- for j in i.group -%}
+            "{{j}}"{{ "," if not loop.last else "" }}
+        {%- endfor -%}
+        ]{{ "," if not loop.last else "" }}
+    {% endfor %}
+
     },
+
 
     "network_interfaces": {
-    	"primary_network_interface": "wlan0",
-    	"future_network_interface": "wlan1"
+    {% for i in network_interfaces %}
+    "{{i.name}}": "{{i.interface}}"{{ "," if not loop.last else "" }}
+    {% endfor %}
+
     },
+
 
     "BSSID_scans" : {
-    	"primary_BSSIDs": {
-    	    "interface": "primary_network_interface",
-    	    "profiles": "all_profiles",
-    	    "unknown_SSID_warning": true,
-    	    "schedule": [ "schedule_every_5_min" ],
-    	    "priority": 1,
-            "meta_information": "probe_stats"
-    	}
+    {% for i in BSSID_scans %}
+    "{{i.name}}": {
+            "interface":"{{i.interface}}",
+            "profiles": "{{i.profiles}}",
+            "unknown_SSID_warning": {{i.unknown_SSID_warning}},
+            "schedule": [
+            {%- for j in i.schedule -%}
+                "{{j}}"{{ "," if not loop.last else "" }}
+            {%- endfor -%}
+            ],
+            "priority": {{i.priority}},
+            "meta_information": "{{i.meta_information}}"
+
+        }{{ "," if not loop.last else "" }}
+    {% endfor %}
+
     },
 
+
     "tasks": {
-        "example_task_rtt": {
-            "profiles": ["MWireless_profile"],
-            "BSSIDs": "primary_BSSIDs",
-            "test": [ "example_test_rtt" ],
-            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
-            "schedule": [ "schedule_every_1_hour", "schedule_Tuesday_10:10AM" ],
-            "priority": 3,
-            "ttl": 45,
-            "meta_information": "probe_stats"
-        },
-        "example_task_throughput": {
-            "profiles": "all_profiles",
-            "BSSIDs": "primary_BSSIDs",
-            "test": [ "example_test_throughput_ul", "example_test_throughput_dl" ],
-            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
-            "schedule": [ "schedule_every_4_hours", "schedule_Tuesday_10:10AM" ],
-            "priority": 2,
-            "ttl": 60,
-            "meta_information": "probe_stats",            
-            "throughput_threshold": 95000000
-        },
-        "example_task_latency": {
-            "profiles": "all_profiles",
-            "BSSIDs": "primary_BSSIDs",
-            "test": [ "example_test_latency" ],
-            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
-            "schedule": [ "schedule_every_5_hours"],
-            "priority": 4,
-            "ttl": 60,
-            "meta_information": "probe_stats"
-        },
-        "example_task_http": {
-            "profiles": "all_profiles",
-            "BSSIDs": "primary_BSSIDs",
-            "test": [ "example_test_http_umich", "example_test_http_google" ],
-            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
-            "schedule": [ "schedule_every_2_hours"],
-            "priority": 5,
-            "ttl": 60,
-            "meta_information": "probe_stats"
-        },
-        "example_task_dns": {
-            "profiles": "all_profiles",
-            "BSSIDs": "primary_BSSIDs",
-            "test": [ "example_test_dns_a", "example_test_dns_aaaa" ],
-            "archives": [ "example_rabbitmq_archive", "example_syslog_archive" ],
-            "schedule": [ "schedule_every_1_hour"],
-            "priority": 6,
-            "ttl": 60,
-            "meta_information": "probe_stats"
-        }
+    {% for i in ptasks %}
+    "{{i.name}}": {
+            "profiles": 
+            {%- if i.profiles is string -%}
+            "{{i.profiles}}",
+            {%- else -%}
+            [
+            {%- for j in i.profiles -%}
+                "{{j}}"{{ "," if not loop.last else "" }}
+            {%- endfor -%}
+            ],
+            {%- endif %}
+
+            "BSSIDs": "{{i.BSSIDs}}",
+            "test": [
+            {%- for j in i.test -%}
+                "{{j}}"{{ "," if not loop.last else "" }}
+            {%- endfor -%}
+            ],
+            "archives": [
+            {%- for j in i.archives -%}
+                "{{j}}"{{ "," if not loop.last else "" }}
+            {%- endfor -%}
+            ],
+            "schedule": [
+            {%- for j in i.schedule -%}
+                "{{j}}"{{ "," if not loop.last else "" }}
+            {%- endfor -%}
+            ],
+            "priority": {{i.priority}},
+            "ttl": {{i.ttl}},
+            "meta_information": "{{i.meta_information}}"
+            {%- if 'throughput_threshold' in i -%}
+            ,
+            "throughput_threshold": {{i.throughput_threshold}}
+            {% endif %}
+
+
+        }{{ "," if not loop.last else "" }}
+    {% endfor %}
+
     }
 }
