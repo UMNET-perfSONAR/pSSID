@@ -193,16 +193,19 @@ def transform(main_obj, bssid):
         return []
 
 
-    #for syslog
+    # for syslog
     script_str = psjson.json_dump(transform)
     insert = ", \\(.)"
     script_str = script_str.replace("\"", "\\\"")
     script_str = script_str.rstrip("}")
     script_str ="\""+ script_str + insert + "}\""
 
-    append = "\"\\\"test\\\": \\\"\\(.test.type)\\\", \\\"succeeded\\\": \\(.result.succeeded), \" + if (.result.succeeded) then \"\\\"result\\\": \\(.result)\" else \"\\\"error\\\":\\\"err\\\"\" end | "
+    append = "\"\\\"test\\\": \\\"\\(.test.type)\\\", \
+             \\\"succeeded\\\": \\(.result.succeeded), \" \
+             + if (.result.succeeded) then \"\\\"result\\\": \\(.result)\" \
+             else \"\\\"error\\\":\\\"err\\\"\" end | "
 
-    #list
+    # list
     archives_list = main_obj["TASK"]["archives"]
     new_list = []
     for i in archives_list:
@@ -308,7 +311,7 @@ def run_scan(next_task, main_obj):
 
 
 def run_pscheduler(main_obj, dest, bssid):
-    if "dest" not in main_obj["TASK"]["test"]["spec"].keys():
+    if main_obj["throughput"] and "dest" not in main_obj["TASK"]["test"]["spec"].keys():
         main_obj["TASK"]["test"]["spec"]["dest"] = dest
 
     main_obj["TASK"]["archives"] = transform(main_obj, bssid)
