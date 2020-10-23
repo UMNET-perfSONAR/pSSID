@@ -52,7 +52,7 @@ password=hash:hashed_password
 
 **pScheduler command to sure up wired interface**
 ```
-/usr/lib/perfsonar/scripts/mod_interface_route --command add --device eth0 --ipv4_gateway 10.0.0.1
+/usr/lib/perfsonar/scripts/mod_interface_route --command add --device eth0 --ipv4_gateway 198.111.224.145
 ```
 
 **Routing**
