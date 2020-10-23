@@ -41,7 +41,8 @@ If your wifi doesn't require a username, then remove the identity field
 
 **Hash password in wpa_supplicant**
 ```
-echo -n plaintext_password_here | iconv -t utf16le | openssl md4
+vi password
+iconv -t utf16le < password | openssl md4
 ```
 
 This password can replace password field in wpa_supplicant with the hash prefix
