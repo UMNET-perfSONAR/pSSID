@@ -1,12 +1,15 @@
 {
+    {% if meta_information is defined -%}
     "meta_information": {
         "probe_stats": {
             "probe_name": "{{probe_name}}",
             "probe_location": "{{probe_location}}"
         }
     },
+    {% endif %}
     
 
+    {% if archives is defined -%}
     "archives": {
     {% for i in archives %}
     "{{i.name}}": {
@@ -20,8 +23,9 @@
         }{{ "," if not loop.last else ""}}
     {% endfor %} 
     },
+    {% endif %}
 
-
+    {% if tests is defined -%}
     "tests": {
     {% for i in tests %}
     "{{i.name}}": {
@@ -36,8 +40,10 @@
     {% endfor %}
 
     },
+    {% endif %}
 
 
+    {% if schedules is defined -%}
     "schedules": {
     {% for i in schedules %}
     "{{i.name}}": {
@@ -46,16 +52,18 @@
     {% endfor %}
 
     },
+    {% endif %}
 
-
+    {% if BSSID_channels is defined -%}
     "BSSID_channels": {
     {% for i in BSSID_channels %}
     "{{i.name}}": {{i.channels}}{{ "," if not loop.last else ""}}
     {% endfor %}
 
     },
+    {% endif %}
 
-
+    {% if SSID_profiles is defined -%}
     "SSID_profiles" : {
     {% for i in SSID %}
     "{{i.name}}": {
@@ -81,8 +89,9 @@
     {% endfor %}
 
     },
+    {% endif %}
 
-
+    {% if SSID_groups is defined -%}
     "SSID_groups": {
     {% for i in SSID_groups %}
     "{{i.name}}": [
@@ -93,16 +102,18 @@
     {% endfor %}
 
     },
+    {% endif %}
 
-
+    {% if network_interfaces is defined -%}
     "network_interfaces": {
     {% for i in network_interfaces %}
     "{{i.name}}": "{{i.interface}}"{{ "," if not loop.last else "" }}
     {% endfor %}
 
     },
+    {% endif %}
 
-
+    {% if BSSID_scans is defined -%}
     "BSSID_scans" : {
     {% for i in BSSID_scans %}
     "{{i.name}}": {
@@ -121,10 +132,11 @@
     {% endfor %}
 
     },
+    {% endif %}
 
-
+    {% if pssid_tasks is defined -%}
     "tasks": {
-    {% for i in ptasks %}
+    {% for i in pssid_tasks %}
     "{{i.name}}": {
             "profiles": 
             {%- if i.profiles is string -%}
@@ -166,4 +178,6 @@
     {% endfor %}
 
     }
+    {% endif %}
+
 }
