@@ -1,10 +1,10 @@
 {
     "meta_information": {
         "probe_stats": {
-            "probe_name": "RPi5000s",
+            "probe_name": "RPi ip",
             "probe_location": "Umich"
-        }
-    },
+            }
+    },    
         
 
     "archives": {

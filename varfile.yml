@@ -1,268 +1,204 @@
 - hosts: all
   vars:
-    meta_information: true
-    probe_name: "RPi5000s"
-    probe_location: "Umich"
-    archives: [
-      {
-        name:  "example_rabbitmq_archive",
-        archiver: "rabbitmq",
+    meta_information: {
+      probe_name: "RPi ip",
+      probe_location: "Umich"
+    }
+
+    archives:
+      - name:  "example_rabbitmq_archive"
+        archiver: "rabbitmq"
         data: {
           _url: "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu",
-          routing-key: "pscheduler_raw"   
+          routing-key: "pscheduler_raw"
         }
-      },
-      {
-        name:  "example_syslog_archive",
-        archiver: "syslog",
+
+      - name:  "example_syslog_archive"
+        archiver: "syslog"
         data: {
           ident: "pSSID22 result",
-          facility : "local3" 
+          facility : "local3"
         }
-      }
 
-    ]    
-    tests: [
-      {
-        name: "example_test_rtt",
-        type: "rtt",
+    tests:
+      - name: "example_test_rtt"
+        type: "rtt"
         spec: {
-          "dest": "www.umich.edu"
-        }        
-      },
-      {
-        name: "example_test_latency",
-        type: "latency",
-        spec: {
-          "dest": "perfsonar-bin-arbl.umnet.umich.edu"
-        }        
-      },
-      {
-        name: "example_test_throughput_ul",
-        type: "throughput",
-        spec: {
-          "dest": "perfsonar-bin-arbl.umnet.umich.edu"
-        }  
-      },
-      {
-        name: "example_test_throughput_dl",
-        type: "throughput",
-        spec: {
-          "source": "perfsonar-bin-arbl.umnet.umich.edu"
-        }  
-      },
-      {
-        name: "example_test_http_umich",
-        type: "http",
-        spec: {
-          "url": "http://umich.edu"
-        }  
-      },
-      {
-        name: "example_test_http_google",
-        type: "http",
-        spec: {
-          "url": "http://google.com"
-        } 
-      },
-      {
-        name: "example_test_dns_a",
-        type: "dns",
-        spec: {
-          "query": "www.umich.edu",
-          "record": "a"
+          dest: "www.umich.edu"
         }
-      },
-      {
-        name: "example_test_dns_aaaa",
-        type: "dns",
+      - name: "example_test_latency"
+        type: "latency"
         spec: {
-          "query": "www.umich.edu",
-          "record": "aaaa"
+          dest: "perfsonar-bin-arbl.umnet.umich.edu"
         }
-      }
-    ]
-    schedules: [
-      {
-        name: "schedule_every_1_min", 
+      - name: "example_test_throughput_ul"
+        type: "throughput"
+        spec: {
+          dest: "perfsonar-bin-arbl.umnet.umich.edu"
+        }
+      - name: "example_test_throughput_dl"
+        type: "throughput"
+        spec: {
+          source: "perfsonar-bin-arbl.umnet.umich.edu"
+        }
+      - name: "example_test_http_umich"
+        type: "http"
+        spec: {
+          url: "http://umich.edu"
+        }
+      - name: "example_test_http_google"
+        type: "http"
+        spec: {
+          url: "http://google.com"
+        }
+      - name: "example_test_dns_a"
+        type: "dns"
+        spec: {
+          query: "www.umich.edu",
+          record: "a"
+        }
+      - name: "example_test_dns_aaaa"
+        type: "dns"
+        spec: {
+          query: "www.umich.edu",
+          record: "aaaa"
+        }
+
+    schedules:      
+      - name: "schedule_every_1_min" 
         repeat: "*/1 * * * *"
-      },
-      {
-        name: "schedule_every_5_min", 
+      - name: "schedule_every_5_min" 
         repeat: "*/5 * * * *"
-      },
-      {
-        name: "schedule_every_10_min", 
+      - name: "schedule_every_10_min" 
         repeat: "*/10 * * * *"
-      },
-      {
-        name: "schedule_every_1_hour", 
+      - name: "schedule_every_1_hour" 
         repeat: "0 * * * *"
-      },
-      {
-        name: "schedule_every_2_hours", 
+      - name: "schedule_every_2_hours" 
         repeat: "0 */2 * * *"
-      },
-      {
-        name: "schedule_every_4_hours", 
+      - name: "schedule_every_4_hours" 
         repeat: "0 */4 * * *"
-      },
-      {
-        name: "schedule_every_5_hours", 
+      - name: "schedule_every_5_hours" 
         repeat: "0 */5 * * *"
-      },
-      {
-        name: "schedule_Tuesday_10AM",
+      - name: "schedule_Tuesday_10AM"
         repeat: "0 10 * * 2"
-      },
-      {   
-        name: "schedule_Tuesday_10:10AM",
+      - name: "schedule_Tuesday_10:10AM"
         repeat: "10 10 * * 2"
-      }  
-    ]
-    BSSID_channels: [
-      {
-        name: "EduRoam_channels",
-        channels: [ 11, 12, 13, 14, 15 ]
-      },
-      {
-        name: "MWireless_channels",
-        channels: [ 1, 2, 3, 4, 5, 10, 64, 11, 44, 36 ]
-      }
 
-    ]
-    SSID: [
-      {
-        name: "MWireless_profile",
-        SSID: "MWireless",
-        channels: "MWireless_channels",
-        channel_mismatch_warning: "true",
-        channel_mismatch_connect: "false",
-        min_signal: -73,
-        min_qualifying: 5, 
-        Auth: "true",
-        type: "User",
-        UID: "fakeUID",
-        Password: "fakepassword",
-        paranoid: "false",
-        pscheduler_restart: "false",
-        apache_restart: "false",
-        postgres_restart: "false",
+    BSSID_channels:
+      - name: "EduRoam_channels"
+        channels: [ 11, 12, 13, 14, 15 ]
+      - name: "MWireless_channels"
+        channels: [ 1, 2, 3, 4, 5, 10, 64, 11, 44, 36, ]
+
+    SSID:
+      - name: "MWireless_profile"
+        SSID: "MWireless"
+        channels: "MWireless_channels"
+        channel_mismatch_warning: "true"
+        channel_mismatch_connect: "false"
+        min_signal: -73
+        min_qualifying: 5
+        auth: "true"
+        type: "User"
+        identity: "wifi-pi-test"
+        password: " MWireless_wpa_passwd "
+        paranoid: "false"
+        pscheduler_restart: "false"
+        apache_restart: "false"
+        postgres_restart: "false"
         wait_time: 0
-      },
-      {
-        name: "EduRoam_profile",
-        SSID: "eduroam",
-        channels: "EduRoam_channels",
-        channel_mismatch_warning: "true",
-        channel_mismatch_connect: "false",
-        min_signal: -65,
-        min_qualifying: 5, 
-        Auth: "true",
-        type: "User",
-        UID: "fakeUID",
-        Password: "fakepassword",
-        paranoid: "true",
-        pscheduler_restart: "false",
-        apache_restart: "false",
-        postgres_restart: "false",
+      - name: "EduRoam_profile"
+        SSID: "eduroam"
+        channels: "EduRoam_channels"
+        channel_mismatch_warning: "true"
+        channel_mismatch_connect: "false"
+        min_signal: -65
+        min_qualifying: 5
+        auth: "true"
+        type: "User"
+        identity: "fakeUID"
+        password: "fakepassword"
+        paranoid: "true"
+        pscheduler_restart: "false"
+        apache_restart: "false"
+        postgres_restart: "false"
         wait_time: 0
-      }
-    ]
-    SSID_groups: [
-      {
-        name: "all_profiles",
+
+    SSID_groups:
+      - name: "all_profiles"
         group: ["EduRoam_profile", "MWireless_profile"]
-      }
-    ]
-    network_interfaces: [
-      {
-        name: "primary_network_interface",
+
+    network_interfaces:
+      - name: "primary_network_interface"
         interface: "wlan0"
-      },
-      {
-        name: "future_network_interface",
+      - name: "future_network_interface"
         interface: "wlan1"
-      }
-    ]
-    BSSID_scans: [
-      {
-        name: "primary_BSSIDs",
-        interface: "primary_network_interface",
-        profiles: "all_profiles",
-        unknown_SSID_warning: "true",
-        schedule: [ "schedule_every_5_min" ],
-        priority: 1,
+
+    BSSID_scans:
+      - name: "primary_BSSIDs"
+        interface: "primary_network_interface"
+        profiles: "all_profiles"
+        unknown_SSID_warning: "true"
+        schedule: [ "schedule_every_5_min" ]
+        priority: 1
         meta_information: "probe_stats"
-      }
-    ]
-    pssid_tasks: [
-      {
-        name: "example_task_rtt",
-        profiles: ["MWireless_profile"],
-        BSSIDs: "primary_BSSIDs",
-        test: [ "example_test_rtt" ],
-        archives: [ "example_rabbitmq_archive", "example_syslog_archive" ],
-        schedule: [ "schedule_every_1_hour", "schedule_Tuesday_10:10AM" ],
-        priority: 3,
-        ttl: 45,
+
+    pssid_tasks:
+      - name: "example_task_rtt"
+        profiles: ["MWireless_profile"]
+        BSSIDs: "primary_BSSIDs"
+        test: [ "example_test_rtt" ]
+        archives: [ "example_rabbitmq_archive", "example_syslog_archive" ]
+        schedule: [ "schedule_every_1_hour", "schedule_Tuesday_10:10AM" ]
+        priority: 3
+        ttl: 45
         meta_information: "probe_stats"
-      },
-      {
-        name: "example_task_throughput",
-        profiles: "all_profiles",
-        BSSIDs: "primary_BSSIDs",
-        test: [ "example_test_throughput_ul", "example_test_throughput_dl" ],
-        archives: [ "example_rabbitmq_archive", "example_syslog_archive" ],
-        schedule:  [ "schedule_every_4_hours", "schedule_Tuesday_10:10AM" ],
-        priority: 2,
-        ttl: 60,
-        meta_information: "probe_stats",
+      - name: "example_task_throughput"
+        profiles: "all_profiles"
+        BSSIDs: "primary_BSSIDs"
+        test: [ "example_test_throughput_ul", "example_test_throughput_dl" ]
+        archives: [ "example_rabbitmq_archive", "example_syslog_archive" ]
+        schedule:  [ "schedule_every_4_hours", "schedule_Tuesday_10:10AM" ]
+        priority: 2
+        ttl: 60
+        meta_information: "probe_stats"
         throughput_threshold: 95000000
-      },
-      {
-        name: "example_task_latency",
-        profiles: "all_profiles",
-        BSSIDs: "primary_BSSIDs",
-        test: [ "example_test_latency" ],
-        archives: [ "example_rabbitmq_archive", "example_syslog_archive" ],
-        schedule: [ "schedule_every_5_hours"],
-        priority: 4,
-        ttl: 60,
+      - name: "example_task_latency"
+        profiles: "all_profiles"
+        BSSIDs: "primary_BSSIDs"
+        test: [ "example_test_latency" ]
+        archives: [ "example_rabbitmq_archive", "example_syslog_archive" ]
+        schedule: [ "schedule_every_5_hours"]
+        priority: 4
+        ttl: 60
         meta_information: "probe_stats"
-      },
-      {
-        name: "example_task_http",
-        profiles: "all_profiles",
-        BSSIDs: "primary_BSSIDs",
-        test: [ "example_test_http_umich", "example_test_http_google" ],
-        archives: [ "example_rabbitmq_archive", "example_syslog_archive" ],
-        schedule: [ "schedule_every_2_hours"],
-        priority: 5,
-        ttl: 60,
+      - name: "example_task_http"
+        profiles: "all_profiles"
+        BSSIDs: "primary_BSSIDs"
+        test: [ "example_test_http_umich", "example_test_http_google" ]
+        archives: [ "example_rabbitmq_archive", "example_syslog_archive" ]
+        schedule: [ "schedule_every_2_hours"]
+        priority: 5
+        ttl: 60
         meta_information: "probe_stats"
-      },
-      {
-        name: "example_task_dns",
-        profiles: "all_profiles",
-        BSSIDs: "primary_BSSIDs",
-        test: [ "example_test_dns_a", "example_test_dns_aaaa" ],
-        archives: [ "example_rabbitmq_archive", "example_syslog_archive" ],
-        schedule: [ "schedule_every_1_hour"],
-        priority: 6,
-        ttl: 60,
+      - name: "example_task_dns"
+        profiles: "all_profiles"
+        BSSIDs: "primary_BSSIDs"
+        test: [ "example_test_dns_a", "example_test_dns_aaaa" ]
+        archives: [ "example_rabbitmq_archive", "example_syslog_archive" ]
+        schedule: [ "schedule_every_1_hour"]
+        priority: 6
+        ttl: 60
         meta_information: "probe_stats"
-      }
-    ]
 
 
   tasks:
     - name: Ansible Template Example
       template:
         src: template.j2
-        dest: config.json
+        dest: pssid_conf.json
 
     - name: Validate archiver configurations
-      script: validate_archivers.py config.json archivers_ref.json
+      script: validate_archivers.py pssid_conf.json
       args:
         executable: python3

@@ -2,10 +2,11 @@
     {% if meta_information is defined -%}
     "meta_information": {
         "probe_stats": {
-            "probe_name": "{{probe_name}}",
-            "probe_location": "{{probe_location}}"
+            {% for i,j in meta_information.items() -%}
+            "{{i}}": "{{j}}"{{ "," if not loop.last else "" }}
+            {% endfor -%}
         }
-    },
+    },    
     {% endif %}
     
 
