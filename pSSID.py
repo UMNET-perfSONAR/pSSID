@@ -229,9 +229,9 @@ def debug(parsed_file, schedule):
 
 
 def rabbitmqQueue(message, queue_name ="", routing_key = "", exchange_name = ""):
-    
+    url = "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu"
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        connection = pika.BlockingConnection(pika.URLParameters(url))
         channel=connection.channel()
         channel.queue_declare(queue=queue_name)
         channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message)
