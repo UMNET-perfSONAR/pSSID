@@ -7,6 +7,7 @@ import json
 import syslog
 import argparse
 import time
+import netifaces as ni
 from wifi import Cell
 
 

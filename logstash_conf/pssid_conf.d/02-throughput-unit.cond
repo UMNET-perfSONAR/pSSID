@@ -1,0 +1,13 @@
+#adding field that reps throughput in MB/s with unit
+
+filter {
+   if [test][type] == "throughput" {
+        if [result][succeeded] {
+                ruby {
+                        add_field  => { "throughput_unit" => "%{result.throughput} / 1000000 Mbs" }
+                }
+        }
+
+    }
+
+}
