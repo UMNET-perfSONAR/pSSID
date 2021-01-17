@@ -1,4 +1,5 @@
-#adding field that reps throughput in MB/s with unit
+# adding field that reps throughput in MB/s with unit
+# Throughput unit filter example. only files ending in .conf will be evaluated by logstash
 
 filter {
    if [test][type] == "throughput" {
