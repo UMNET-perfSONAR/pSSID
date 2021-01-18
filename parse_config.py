@@ -211,19 +211,6 @@ def tests(p):
     print("all_scans", p.all_scans)
     print("SINGLE END")
 
-    #pscheduler task
-    # psched = p.create_pScheduler_task("example_task_throughput", "example_test_throughput_ul")
-    # print(psched)
-
-    # #pSSID task
-    # pssid = p.create_pSSID_task("example_task_throughput", "example_test_throughput_ul")
-    # print(pssid)
-
-    # #task list
-    # print(p.pSSID_task_list())
-
-
-
 
 if __name__ == "__main__":
 

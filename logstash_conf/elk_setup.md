@@ -103,10 +103,13 @@ kibana specific errors are logged in:
 
 **Built-in Users**
 
-Ansible installation should have created built in users with their passwords in the directory /etc/perfsonar/elastic/
-	auth_setup.out contains all the elasticsearch built in users
-	elastic_login contains elastic user and password that local curl commands use
-	pscheduler_logstash contains user password for pscheduler that will be used when setting up piplines from logstash to elastic
+During insatallation this script `/usr/lib/perfsonar/scripts/pselastic_secure.sh` is ran to set up elk
+
+
+Ansible installation should have created built in users with their passwords in the directory `/etc/perfsonar/elastic/`
+	`auth_setup.out` contains all the elasticsearch built in users
+	`elastic_login` contains elastic user and password that local curl commands use
+	`pscheduler_logstash` contains user password for pscheduler that will be used when setting up piplines from logstash to elastic
 
 
 ---
