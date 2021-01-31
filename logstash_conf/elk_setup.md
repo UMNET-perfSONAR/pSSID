@@ -1,15 +1,47 @@
 # Installing and Securing ELK
 
-[elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/elasticsearch-intro.html)
-Follow the ansible instruction from [ansible-playbook-elastic](https://github.com/UMNET-perfSONAR/ansible-playbook-elastic)
+Official documentation is available at [elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/elasticsearch-intro.html)
+
+**Installing**
+--
+
+Follow the ansible instructions from [ansible-playbook-elastic](https://github.com/UMNET-perfSONAR/ansible-playbook-elastic)
+
+The ansible role sets up rabbitmq, elasticsearch, logstash, and kibana, installs necessary packages, and creates any necessary users. This role runs a script (`/usr/lib/perfsonar/scripts/pselastic_secure.sh`) after installing elk which bootstraps username and passwords for pscheduler, kibana, logstash, and default user in order to interact with elasticsearch. The passwords are saved in `/etc/perfsonar/elastic/auth_setup.out` on the elk server
+
+---
+
+**Integrating**
+--
+
+Prerequisite: rabbitmq needs to installed on all the probes and the elk server
 
 
+The ansible instructions above should set up two pipelines for pscheduler and pssid. The pipelines are set up in `/etc/logstash/pipelines.yml`. The pssid pipeline has two main files: [pssid-input-output.conf](https://github.com/UMNET-perfSONAR/pSSID/blob/master/logstash_conf/pssid_conf.d/pssid-input-output.conf) and [01-pssid-scan-filter.conf](https://github.com/UMNET-perfSONAR/pSSID/blob/master/logstash_conf/pssid_conf.d/01-pssid-scan-filter.conf). 
+
+The [pssid-input-output.conf](https://github.com/UMNET-perfSONAR/pSSID/blob/master/logstash_conf/pssid_conf.d/pssid-input-output.conf) sets up input using rabbitmq plugin that extracts any messages from rabbitmq queue named 'pSSID' on the elk server. This file also sets up elasticsearch output for the 'pssid' index.
+
+The [01-pssid-scan-filter.conf](https://github.com/UMNET-perfSONAR/pSSID/blob/master/logstash_conf/pssid_conf.d/01-pssid-scan-filter.conf) splits the scanned bssid info and ssid coverage info into own individual objects so it is easier to aggreagrate the data.
+
+contents of `/etc/logstash/pipelines.yml`:
+```
+# This file is where you define your pipelines. You can define multiple.
+# For more information on multiple pipelines, see the documentation:
+#   https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html
+
+- pipeline.id: main
+  path.config: "/etc/logstash/conf.d/*.conf"
+- pipeline.id: second
+  path.config: "/etc/logstash/pssid_conf.d/*.conf"
+
+```
+
+TODO: add a filter for http request that translates return code into english (200 -> OK)
+
+
+---
+\
 **Elastic Directories**
-
-All the following directories should have owner elasticsearch and be in group elasticsearch(ls -la), otherwise change ownership:
-```
-sudo chown -R elasticsearch:elasticsearch <directory>
-```
 
 This is the default elastic home (ES_HOME) directory where the elastic binaries and dependencies reside:
 
@@ -18,7 +50,7 @@ This is the default elastic home (ES_HOME) directory where the elastic binaries 
 ```
 In ES_HOME directory, elasticsearch can be manually started:
 ```
-./bin/elasticsearch [options]		# check elasticsearch docs for options
+./bin/elasticsearch [options]		# refer to elasticsearch docs for information on options
 ```
 
 This is the default elastic config (ES_CONF) directory where elastic.yml and other config files reside:
@@ -78,7 +110,7 @@ logstash JAVA_HOME and elasticsearch login user/password should be defined in:
 **kibana Directories**
 
 All the following directories should have owner kibana and be in group kibana(ls -la), otherwise change ownership:
-```
+``` 
 sudo chown -R kibana:kibana <directory>
 ```
 
