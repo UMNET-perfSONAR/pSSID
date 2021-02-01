@@ -5,9 +5,9 @@ Official documentation is available at [elasticsearch](https://www.elastic.co/gu
 **Installing**
 --
 
-Follow the ansible instructions from [ansible-playbook-elastic](https://github.com/UMNET-perfSONAR/ansible-playbook-elastic)
+Follow the ansible instructions from [ansible-playbook-elastic](https://github.com/UMNET-perfSONAR/ansible-playbook-elastic) to install elk in a remote server.
 
-The ansible role sets up rabbitmq, elasticsearch, logstash, and kibana, installs necessary packages, and creates any necessary users. This role runs a script (`/usr/lib/perfsonar/scripts/pselastic_secure.sh`) after installing elk which bootstraps username and passwords for pscheduler, kibana, logstash, and default user in order to interact with elasticsearch. The passwords are saved in `/etc/perfsonar/elastic/auth_setup.out` on the elk server
+This ansible palybook sets up rabbitmq, elasticsearch, logstash, and kibana, installs necessary packages, and creates any necessary users. It also runs a script (`/usr/lib/perfsonar/scripts/pselastic_secure.sh`) after installing elk which bootstraps username and passwords for pscheduler, kibana, logstash, and default user. The usernames and passwords allow each of the services(pscheduler, kibana, logstash, and default user) to interact with elasticsearch. The passwords are saved in `/etc/perfsonar/elastic/auth_setup.out` on the elk server
 
 ---
 
@@ -19,7 +19,7 @@ Prerequisite: rabbitmq needs to installed on all the probes and the elk server
 
 The ansible instructions above should set up two pipelines for pscheduler and pssid. The pipelines are set up in `/etc/logstash/pipelines.yml`. The pssid pipeline has two main files: [pssid-input-output.conf](https://github.com/UMNET-perfSONAR/pSSID/blob/master/logstash_conf/pssid_conf.d/pssid-input-output.conf) and [01-pssid-scan-filter.conf](https://github.com/UMNET-perfSONAR/pSSID/blob/master/logstash_conf/pssid_conf.d/01-pssid-scan-filter.conf). 
 
-The [pssid-input-output.conf](https://github.com/UMNET-perfSONAR/pSSID/blob/master/logstash_conf/pssid_conf.d/pssid-input-output.conf) sets up input using rabbitmq plugin that extracts any messages from rabbitmq queue named 'pSSID' on the elk server. This file also sets up elasticsearch output for the 'pssid' index.
+The [pssid-input-output.conf](https://github.com/UMNET-perfSONAR/pSSID/blob/master/logstash_conf/pssid_conf.d/pssid-input-output.conf) sets up input using rabbitmq plugin that extracts any messages from rabbitmq queue named 'pSSID' on the elk server. This file also sets up elasticsearch output for the 'pssid' index that we see in Kibana.
 
 The [01-pssid-scan-filter.conf](https://github.com/UMNET-perfSONAR/pSSID/blob/master/logstash_conf/pssid_conf.d/01-pssid-scan-filter.conf) splits the scanned bssid info and ssid coverage info into own individual objects so it is easier to aggreagrate the data.
 TODO: add a filter for http request that translates return code into english (200 -> OK)
@@ -183,7 +183,9 @@ to see systemd errors. Restart each of the service above if necessary.
 
 Note: Ansible installation sets most of the configuration in those directories mentioned above. If any errors persist, re-run the commands by hand (not all commands need to be re-run). 
 
-Common error: Ansible 'run secure script' may have failed. Run the following commands:
+**Common errors**
+
+Ansible 'run secure script' may have failed. Run the following commands:
 ```
 cd /usr/lib/perfsonar/scripts/
 ./pselastic_secure.sh
@@ -207,11 +209,17 @@ cd /usr/lib/perfsonar/scripts/
 ./pselastic_secure.sh
 ```
 
-Kibana error: it is possible that pselastic_secure.sh changed kibana's password for elasticsearch login. Check kibana.yml and search for 'elasticsearch.username'. Make sure the user adn password correspon with kibana user and password in the built-in users file (/etc/perfsonar/elastic/auth_setup.out)
+**Kibana Errors:**
 
-Logstash Error: Make sure correct JAVA_HOME is defined in /etc/sysconfig/logstash
+It is possible that pselastic_secure.sh changed kibana's password for elasticsearch login if the script was run again after the installation. Check kibana.yml and search for 'elasticsearch.username'. Make sure the user and password correspon with kibana user and password in the built-in users file (/etc/perfsonar/elastic/auth_setup.out)
 
-elasticsearch error: if stops running after patching:
+**Logstash Errors:**
+
+ Make sure correct JAVA_HOME is defined in /etc/sysconfig/logstash
+
+**Elasticsearch Errors:**
+
+ if elasticsearch stops running after patching, check that /tmp is mounted with 'exec':
 ```
 cat /proc/mounts | grep /tmp
 ```
@@ -221,7 +229,9 @@ mount -o remount,exec /tmp
 ```
 then restart necessary services
 
-Other errors: make sure the permissions are set appropriately, /tmp is mounted with 'noexec' absent
+**Other Errors:**
+
+ Make sure the permissions are set appropriately, /tmp is mounted with 'exec'
 
 
 
