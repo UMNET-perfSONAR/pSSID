@@ -22,7 +22,9 @@ The ansible instructions above should set up two pipelines for pscheduler and ps
 The [pssid-input-output.conf](https://github.com/UMNET-perfSONAR/pSSID/blob/master/logstash_conf/pssid_conf.d/pssid-input-output.conf) sets up input using rabbitmq plugin that extracts any messages from rabbitmq queue named 'pSSID' on the elk server. This file also sets up elasticsearch output for the 'pssid' index.
 
 The [01-pssid-scan-filter.conf](https://github.com/UMNET-perfSONAR/pSSID/blob/master/logstash_conf/pssid_conf.d/01-pssid-scan-filter.conf) splits the scanned bssid info and ssid coverage info into own individual objects so it is easier to aggreagrate the data.
+TODO: add a filter for http request that translates return code into english (200 -> OK)
 
+\
 contents of `/etc/logstash/pipelines.yml`:
 ```
 # This file is where you define your pipelines. You can define multiple.
@@ -35,8 +37,19 @@ contents of `/etc/logstash/pipelines.yml`:
   path.config: "/etc/logstash/pssid_conf.d/*.conf"
 
 ```
+\
+To allow communication between elk server and the probes, run these commands:\
+Pi:
+```
+firewall-cmd --permanent --zone=public --add-port=5672/tcp
+```
 
-TODO: add a filter for http request that translates return code into english (200 -> OK)
+Elk Server:
+```
+systemctl status firewalld
+systemctl stop firewalld
+```
+
 
 
 ---
