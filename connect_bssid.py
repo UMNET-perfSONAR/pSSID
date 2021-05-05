@@ -129,6 +129,7 @@ def prepare_connection(ssid, bssid, interface, auth):
     run_wpa_supplicant = ('wpa_supplicant -B -c ' + wpa_supp_path + \
             ' -i ' + interface)
     dhclient = ('dhclient ' + interface)
+    dhclient_release = ('dhclient -r ' + interface)
 
     # since the API is constructed for CLI it expects certain options
     # to always be set in the context object
@@ -188,8 +189,8 @@ def prepare_connection(ssid, bssid, interface, auth):
             dict(action=dict(module='systemd', name='postgresql',\
                     state='stopped'), when=flags['postgres_restart']),
 
-            # Kill dhclient
-            dict(action=dict(module='command', args='killall dhclient'), \
+            # release dhclient lease on `interface`
+            dict(action=dict(module='command', args=dhclient_release), \
                     ignore_errors='yes'),
 
             # Remove default route to make dhclient happy
