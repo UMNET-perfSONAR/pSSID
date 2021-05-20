@@ -16,7 +16,6 @@ import warnings
 import pika
 import syslog
 import traceback
-import multiprocessing as mp
 
 
 parser = argparse.ArgumentParser(description='pSSID')
@@ -223,9 +222,9 @@ def transform(main_obj, bssid):
 
 
 def debug(parsed_file, schedule):
-    # print parsed objects
+    #print parsed objects
     tests(parsed_file)
-    # print initial queue
+    #print initial queue
     schedule.print_queue()
 
 
@@ -266,7 +265,7 @@ def reschedule(main_obj, cron, ssid, scan=False):
 
 
 def print_task_info(main_obj, next_task):
-    print_task = "Task: " + time.ctime(next_task.time) + \
+    print_task = "Next Task: " + time.ctime(next_task.time) + \
                 " main_obj: " + main_obj["name"]
     syslog.syslog(syslog.LOG_LOCAL3 | syslog.LOG_INFO, print_task)
     if DEBUG:
@@ -329,9 +328,8 @@ def run_child(bssid_list, main_obj, ssid, interface):
     for item in bssid_list[main_obj["BSSIDs"]]:
         bssid = item["BSSID"]
         if single_BSSID_qualify(bssid, ssid):
-            if DEBUG: print("Connect %s %s", ssid, bssid)
+            if DEBUG: print("Connect")
             # Connect to bssid
-            # if connection takes more than 30 sec, kill the dhclient process
             connection_info = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]], ssid["AuthMethod"])
             
             connection_info = json.loads(connection_info)
@@ -354,7 +352,6 @@ def loop_forever():
     connect_ttl = 20
     task_ttl = 0
     computed_TTL = 0
-    child_process = None
 
     interface = {}
     scanned_table = []
@@ -376,11 +373,10 @@ def loop_forever():
             child_exited = False
             continue
 
-        if child_process is not None:
+        if pid_child != 0:
             waittime = time.time() + computed_TTL
-            child_process.join(waittime)
-            # while not child_exited and time.time() < waittime:
-            #     continue
+            while not child_exited and time.time() < waittime:
+                continue
 
         elif next_task.time > time.time():
             sleep_time = next_task.time - time.time()
@@ -389,23 +385,18 @@ def loop_forever():
 
 
 
-        if child_process is not None:
-            # if not child_exited:
-            #     if DEBUG: print ("***kill child***", pid_child)
-            #     os.kill(pid_child, signal.SIGKILL)
-            #     try:
-            #         os.wait()
-            #     except:
-            #         print(time.ctime(time.time()))
-            #         print("CHILD DEAD")
-            # else:
-            #     child_exited = False
-            child_process.terminate()
-            if DEBUG:
-                print(time.ctime(time.time()))
-                print("CHILD DEAD")
+        if(pid_child != 0):
+            if not child_exited:
+                if DEBUG: print ("***kill child***", pid_child)
+                os.kill(pid_child, signal.SIGKILL)
+                try:
+                    os.wait()
+                except:
+                    print(time.ctime(time.time()))
+                    print("CHILD DEAD")
+            else:
+                child_exited = False
 
-            child_process = None
             pid_child = 0
             next_task = reschedule(main_obj, cron, ssid)
             main_obj, cron, ssid, scan = retrieve(next_task)
@@ -432,16 +423,14 @@ def loop_forever():
             continue
 
 
-        child_process = mp.Process(target=run_child, args=(bssid_list, main_obj, ssid, interface,))
-        child_process.start()
-        # pid_child = os.fork()
-        # if pid_child == 0:
+        pid_child = os.fork()
+        if pid_child == 0:
 
-        #     signal.signal(signal.SIGCHLD, old_sig)
-        #     if DEBUG: print("CHILD")
-        #     run_child(bssid_list, main_obj, ssid, interface)
+            signal.signal(signal.SIGCHLD, old_sig)
+            if DEBUG: print("CHILD")
+            run_child(bssid_list, main_obj, ssid, interface)
 
-        #     exit(0)
+            exit(0)
 
 
 
