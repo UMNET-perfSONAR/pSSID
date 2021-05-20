@@ -56,11 +56,12 @@ class Parse:
     """
 
     def __init__(self, config_file):
-        #psjson makes sure that it is a valid json file
+        # psjson makes sure that it is a valid json file
         json_obj =  psjson.json_load(source=config_file)
 
         try:
             self.meta = json_obj["meta_information"]
+            self.amqp_url = json_obj["amqp_url"]
             self.archives = json_obj["archives"]
             self.tests = json_obj["tests"]
             self.schedules = json_obj["schedules"]

@@ -71,7 +71,7 @@ def set_flags(auth):
         "apache_restart": apache_restart,
         "postgres_restart": postgres_restart,
         "wait_time": wait_time
-        }
+    }
 
     return flags
 
@@ -81,17 +81,18 @@ def test_connection(ssid, bssid, interface):
     Start connection attempt after command line call
     Take in arguments on the command line
     """
-    AuthMethod = { "type": "User", "UID": "fakeUID", "Password": "fakePassword",\
-            "connection_flags": {
-                        "paranoid": False,
-                        "pscheduler_restart": False,
-                        "apache_restart": False,
-                        "postgres_restart": False,
-                        "wait_time": 0 }
-            }
+    AuthMethod = { "type": "user", "identity": "fakeUID", "password": "fakePassword",\
+        "connection_flags": {
+            "paranoid": False,
+            "pscheduler_restart": False,
+            "apache_restart": False,
+            "postgres_restart": False,
+            "wait_time": 0 }
+        }
     prepare_connection(ssid, bssid, interface, AuthMethod)
 
-
+# def connect_network(ssid, bssid, interface, macaddress):
+    
 def prepare_connection(ssid, bssid, interface, auth):
     """
     Prepare a connection to a given ssid and bssid using wpa_supplicant
@@ -107,14 +108,13 @@ def prepare_connection(ssid, bssid, interface, auth):
     start_time = time.time()
 
     # Determine auth method
-    if auth['type'] == 'MacAddress':
-        print('Connect to MSetup')
+    if auth['type'] == 'macaddress':
+        # TODO: switch mac adresses and connect
         exit()
 
-    elif auth['type'] == 'User':
-        wpa_supp_path = '/etc/wpa_supplicant/wpa_supplicant_' + ssid + '.conf'
-        if DEBUG:
-            print('User auth')
+    wpa_supp_path = '/etc/wpa_supplicant/wpa_supplicant_' + ssid + '.conf'
+    if DEBUG:
+        print('User auth')
 
     # Format SSID and BSSID for wpa supplicant
     ssid_line = '    ssid="' + ssid + '"'
@@ -127,15 +127,15 @@ def prepare_connection(ssid, bssid, interface, auth):
 
     # Add interface to wpa supplicant and dhclient commands
     run_wpa_supplicant = ('wpa_supplicant -B -c ' + wpa_supp_path + \
-            ' -i ' + interface)
+        ' -i ' + interface)
     dhclient = ('dhclient ' + interface)
     dhclient_release = ('dhclient -r ' + interface)
 
     # since the API is constructed for CLI it expects certain options
     # to always be set in the context object
     context.CLIARGS = ImmutableDict(connection='local', \
-            module_path=['/to/mymodules'], forks=10, become='yes', \
-            become_method='su', become_user=None, check=False, diff=False)
+        module_path=['/to/mymodules'], forks=10, become='yes', \
+        become_method='su', become_user=None, check=False, diff=False)
 
     # initialize needed objects
     loader = DataLoader()
@@ -159,51 +159,51 @@ def prepare_connection(ssid, bssid, interface, auth):
         tasks=[
             # Check for wpa_supplicant file
             dict(action=dict(module='stat', path=wpa_supp_path), \
-                    register='wpa_exists'),
+                register='wpa_exists'),
 
             # Exit play if wpa_supplicant is not found
             dict(action=dict(module='debug',\
-                    msg='Could not find wpa_supplicant with given ssid'),\
-                    when='not wpa_exists.stat.exists'),
+                msg='Could not find wpa_supplicant with given ssid'),\
+                when='not wpa_exists.stat.exists'),
             dict(action=dict(module='fail',\
-                    msg='Could not find wpa_supplicant for given ssid'),\
-                    when='not wpa_exists.stat.exists'),
+                msg='Could not find wpa_supplicant for given ssid'),\
+                when='not wpa_exists.stat.exists'),
             dict(action=dict(module='meta', args='end_play'),\
-                    when='not wpa_exists.stat.exists'),
+                when='not wpa_exists.stat.exists'),
 
             # Take down pscheduler services if in paranoid mode
             dict(action=dict(module='systemd', name='pscheduler-archiver',\
-                    state='stopped'), when=flags['pscheduler_restart']),
+                state='stopped'), when=flags['pscheduler_restart']),
             dict(action=dict(module='systemd', name='pscheduler-runner',\
-                    state='stopped'), when=flags['pscheduler_restart']),
+                state='stopped'), when=flags['pscheduler_restart']),
             dict(action=dict(module='systemd', name='pscheduler-scheduler',\
-                    state='stopped'), when=flags['pscheduler_restart']),
+                state='stopped'), when=flags['pscheduler_restart']),
             dict(action=dict(module='systemd', name='pscheduler-ticker',\
-                    state='stopped'), when=flags['pscheduler_restart']),
+                state='stopped'), when=flags['pscheduler_restart']),
 
             # Stop apache if toggled
             dict(action=dict(module='systemd', name='apache2',\
-                    state='stopped'), when=flags['apache_restart']),
+                state='stopped'), when=flags['apache_restart']),
 
             # Stop postgres if toggled
             dict(action=dict(module='systemd', name='postgresql',\
-                    state='stopped'), when=flags['postgres_restart']),
+                state='stopped'), when=flags['postgres_restart']),
 
             # release dhclient lease on `interface`
             dict(action=dict(module='command', args=dhclient_release), \
-                    ignore_errors='yes'),
+                ignore_errors='yes'),
 
             # Remove default route to make dhclient happy
             dict(action=dict(module='command', args='ip route del default'),\
-                    ignore_errors='yes'),
+                ignore_errors='yes'),
 
             # Remove WiFi interface config
             dict(action=dict(module='file',\
-                    path='/var/run/wpa_supplicant/wlan0', state='absent')),
+                path='/var/run/wpa_supplicant/wlan0', state='absent')),
 
             # Kill wpa_supplicant
             dict(action=dict(module='command', args='killall wpa_supplicant'),\
-                    ignore_errors='yes'),
+                ignore_errors='yes'),
 
             # Bring WiFi interface down
             dict(action=dict(module='command', args=bring_down)),
@@ -216,11 +216,11 @@ def prepare_connection(ssid, bssid, interface, auth):
 
             # Add SSID to wpa_supplicant
             dict(action=dict(module='lineinfile', path=wpa_supp_path,\
-                    regexp='^(.*)ssid=(.*)$', line=ssid_line)),
+                regexp='^(.*)ssid=(.*)$', line=ssid_line)),
 
             # Add BSSID to wpa_supplicant
             dict(action=dict(module='lineinfile', path=wpa_supp_path,\
-                    regexp='^(.*)bssid=(.*)$', line=bssid_line)),
+                regexp='^(.*)bssid=(.*)$', line=bssid_line)),
 
             # Connect to WiFi
             dict(action=dict(module='command', args=run_wpa_supplicant)),
@@ -230,21 +230,21 @@ def prepare_connection(ssid, bssid, interface, auth):
 
             # Bring pScheduler services back
             dict(action=dict(module='systemd', name='pscheduler-archiver',\
-                    state='started'), when=flags['pscheduler_restart']),
+                state='started'), when=flags['pscheduler_restart']),
             dict(action=dict(module='systemd', name='pscheduler-runner',\
-                    state='started'), when=flags['pscheduler_restart']),
+                state='started'), when=flags['pscheduler_restart']),
             dict(action=dict(module='systemd', name='pscheduler-scheduler',\
-                    state='started'), when=flags['pscheduler_restart']),
+                state='started'), when=flags['pscheduler_restart']),
             dict(action=dict(module='systemd', name='pscheduler-ticker',\
-                    state='started'), when=flags['pscheduler_restart']),
+                state='started'), when=flags['pscheduler_restart']),
 
             # Start apache if toggled
             dict(action=dict(module='systemd', name='apache2',\
-                    state='started'), when=flags['apache_restart']),
+                state='started'), when=flags['apache_restart']),
 
             # Start postgres if toggled
             dict(action=dict(module='systemd', name='postgresql',\
-                    state='started'), when=flags['postgres_restart']),
+                state='started'), when=flags['postgres_restart']),
             ]
         )
 
