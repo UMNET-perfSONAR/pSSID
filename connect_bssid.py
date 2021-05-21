@@ -287,8 +287,12 @@ def prepare_connection(ssid, bssid, interface, auth):
         connected = bssid_validator.validate_connect(bssid)
 
     # Get ip
-    ni.ifaddresses('wlan0')
-    ip_addr = ni.ifaddresses('wlan0')[ni.AF_INET][0]['addr']
+    ip_addr = 'Failed'
+    try:
+        ni.ifaddresses('wlan0')
+        ip_addr = ni.ifaddresses('wlan0')[ni.AF_INET][0]['addr']
+    except:
+        connected = False
     
     connection_info = {}
     connection_info['ssid'] = ssid
