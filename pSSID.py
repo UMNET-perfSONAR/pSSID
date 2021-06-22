@@ -16,7 +16,9 @@ import warnings
 import pika
 import syslog
 import traceback
-
+import multiprocessing
+import re
+import subprocess as sp
 
 parser = argparse.ArgumentParser(description='pSSID')
 parser.add_argument('file', action='store',
@@ -212,10 +214,13 @@ def transform(main_obj, bssid):
 
         i["transform"] = {}
         if i["archiver"] == "rabbitmq":
-            i["transform"]["script"] = '.pSSID = '  + json.dumps(transform)
-        else:    
+            i["transform"]["script"] = ".pSSID = "  + json.dumps(transform)
+        elif i["archiver"] == "syslog":    
             i["transform"]["script"] = append + script_str #tested and works with syslog
-
+        elif i["archiver"] == "http":
+            i["transform"]["script"] = "\"redirect_url=www.perfsonar.net&buttonClicked=4\""
+            i["transform"]["output-raw"] = True
+        
         new_list.append(i)
 
     return new_list
@@ -229,6 +234,7 @@ def debug(parsed_file, schedule):
 
 
 def rabbitmqQueue(message, queue_name ="", routing_key = "", exchange_name = ""):
+    # TODO: extract url
     url = "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu"
     try:
         connection = pika.BlockingConnection(pika.URLParameters(url))
@@ -311,38 +317,111 @@ def run_scan(next_task, main_obj):
 
 
 def run_pscheduler(main_obj, dest, bssid):
+    message = None
     if main_obj["throughput"] and "dest" not in main_obj["TASK"]["test"]["spec"].keys():
         main_obj["TASK"]["test"]["spec"]["dest"] = dest
 
     main_obj["TASK"]["archives"] = transform(main_obj, bssid)
     pSched_task = main_obj["TASK"]
     try:
-        rest_api.main(pSched_task)
+        message = rest_api.main(pSched_task)
     except:
         print(time.ctime(time.time()))
         print("ERROR in running test with pscheduler", main_obj["name"], bssid["ssid"])
         print(traceback.print_exc())
+    
+    return message
+
+def change_macaddress(mac):
+    args = 'macchanger -m ' + mac + ' wlan0'
+    if mac == 'permanent':
+        args = 'macchanger -p wlan0'    
+    sp_output = sp.run(args, shell=True, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
 
 
 def run_child(bssid_list, main_obj, ssid, interface):
+    captive_portal_passed = False
+    change_mac = False
     for item in bssid_list[main_obj["BSSIDs"]]:
         bssid = item["BSSID"]
         if single_BSSID_qualify(bssid, ssid):
-            if DEBUG: print("Connect")
-            # Connect to bssid
-            connection_info = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]], ssid["AuthMethod"])
-            
-            connection_info = json.loads(connection_info)
-            connection_info["bssid_info"] = bssid
-            connection_info["meta"] = main_obj["meta"]
+            # TODO: check if MSetup here
+            run_loop = 1
+            if ssid['AuthMethod']['type'] == 'macaddress':
+                run_loop = ssid['AuthMethod']['num_addresses']
+                change_mac = True
 
-            rabbitmqQueue(json.dumps(connection_info), "pSSID", "pSSID")
+            for i in range(run_loop):
+                if change_mac:
+                    change_macaddress(ssid['AuthMethod']['macaddresses'][i])
+                
+                if DEBUG: print("Connect")
+                # Connect to bssid
+                connection_info = connect_bssid.prepare_connection(bssid['ssid'], bssid['address'], interface[main_obj["BSSIDs"]], ssid["AuthMethod"])
+                
+                connection_info = json.loads(connection_info)
+                connection_info["bssid_info"] = bssid
+                connection_info["meta"] = main_obj["meta"]
 
-            #if connection fails, it won't run any test
-            if connection_info["connected"]:
+                rabbitmqQueue(json.dumps(connection_info), "pSSID", "pSSID")
+
+                # if connection fails, it won't run any test
+                if not connection_info["connected"]:
+                    if DEBUG: 
+                        print("Connection Failed")
+                    continue
+                    
+                # TODO: check if mguest here
+                # captive portal arg in config file
+                if ssid['AuthMethod']['type'] == 'captive_portal' and not captive_portal_passed:
+                    task_temp = {
+                        "schema": 1,
+                        "schedule": {},
+                        "archives": [
+                        ],
+                        "test": {
+                            "spec": {
+                                "keep-content": 0,
+                                "schema": 2,
+                                "url": "www.perfsonar.net"
+                            },
+                            "type": "http"
+                        }
+                    }
+                    task_obj = main_obj.copy()
+                    task_obj['name'] = 'http_test'
+                    task_obj['TASK'] = task_temp
+                    task_obj['throughput'] = False
+                    
+                    try:
+                        result = run_pscheduler(task_obj, connection_info["new_ip"], bssid)
+                        url = result['content']
+                        url = re.search(ssid['AuthMethod']['search_exp'], url)                
+                        task_obj['TASK']['test']['spec']['keep-content'] = 1
+                        http_archive = {
+                            "archiver": "http", 
+                            "data" : {
+                                "schema": 2,
+                                "op": "post",
+                                "_url": url.group(1),
+                                "_headers": {
+                                    "Content-Type": "application/x-www-form-urlencoded"
+                                }
+                            }
+                        }
+                        task_obj['TASK']["archives"].append(http_archive)
+                        run_pscheduler(task_obj, connection_info["new_ip"], bssid)
+                        captive_portal_passed = True
+                    except:
+                        captive_portal_passed = True
+                
+
                 run_pscheduler(main_obj, connection_info["new_ip"], bssid)
-            elif DEBUG: 
-                print("Connection Failed")
+
+    if change_mac:
+        # change to permanent mac
+        change_macaddress('permanent')
+            
 
 
 def loop_forever():
@@ -359,10 +438,11 @@ def loop_forever():
 
     next_task = schedule.get_queue[0]
     schedule.pop(next_task)
+
+    # main_obj is a complete pSSID task created by parse_config.py
     main_obj, cron, ssid, scan = retrieve(next_task)
     print_task_info(main_obj, next_task)
-    
-    old_sig = signal.signal(signal.SIGCHLD, sigh)
+        
     while True:
 
         if scan:
@@ -373,45 +453,15 @@ def loop_forever():
             child_exited = False
             continue
 
-        if pid_child != 0:
-            waittime = time.time() + computed_TTL
-            while not child_exited and time.time() < waittime:
-                continue
-
         elif next_task.time > time.time():
             sleep_time = next_task.time - time.time()
             if DEBUG: print("Waiting: ", sleep_time)
             time.sleep(sleep_time)
 
-
-
-        if(pid_child != 0):
-            if not child_exited:
-                if DEBUG: print ("***kill child***", pid_child)
-                os.kill(pid_child, signal.SIGKILL)
-                try:
-                    os.wait()
-                except:
-                    print(time.ctime(time.time()))
-                    print("CHILD DEAD")
-            else:
-                child_exited = False
-
-            pid_child = 0
-            next_task = reschedule(main_obj, cron, ssid)
-            main_obj, cron, ssid, scan = retrieve(next_task)
-            print_task_info(main_obj, next_task)
-
-            if schedule.empty():
-                print("ERROR: this should never reach")
-
-            continue
-
-
         task_ttl = main_obj["ttl"] + connect_ttl
         num_bssids = BSSID_qualify(scanned_table, ssid)
 
-        #Compute task time to live
+        # Compute task time to live
         if num_bssids:
             computed_TTL = num_bssids * task_ttl
             if DEBUG: print("TTL", computed_TTL, num_bssids)
@@ -422,16 +472,18 @@ def loop_forever():
             print_task_info(main_obj, next_task)
             continue
 
+        x = multiprocessing.Process(target=run_child, args=(bssid_list, main_obj, ssid, interface,))
+        x.start()
+        x.join(computed_TTL)
+        if x.is_alive():
+            x.terminate()
 
-        pid_child = os.fork()
-        if pid_child == 0:
+        next_task = reschedule(main_obj, cron, ssid)
+        main_obj, cron, ssid, scan = retrieve(next_task)
+        print_task_info(main_obj, next_task)
 
-            signal.signal(signal.SIGCHLD, old_sig)
-            if DEBUG: print("CHILD")
-            run_child(bssid_list, main_obj, ssid, interface)
-
-            exit(0)
-
+        if schedule.empty():
+            print("ERROR: this should never reach")
 
 
 with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr, working_directory=os.getcwd()):

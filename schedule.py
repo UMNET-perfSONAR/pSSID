@@ -45,20 +45,20 @@ class Schedule:
 	
 	def initial_schedule(self, given_time=time.time()):
 		SCANS = self.p.all_scans	
-		for eachscan in SCANS.values():
-			cron_list = eachscan["schedule"]
-			for eachcron in cron_list:
-				self.s.enterabs(time.time(), eachscan["priority"], run_schedule, argument = (eachscan, eachcron, {}, True))
+		for each_scan in SCANS.values():
+			cron_list = each_scan["schedule"]
+			for each_cron in cron_list:
+				self.s.enterabs(time.time(), each_scan["priority"], run_schedule, argument = (each_scan, each_cron, {}, True))
 
 		
 		TASKS = self.p.pSSID_task_list()
-		for eachtask in TASKS:
-			cron_list = eachtask["schedule"]
-			ssid_list = eachtask["SSIDs"]
+		for each_task in TASKS:
+			cron_list = each_task["schedule"]
+			ssid_list = each_task["SSIDs"]
 
-			for eachssid in ssid_list:
-				for eachcron in cron_list:
-					self.reschedule(eachtask, eachcron, eachssid, given_time)
+			for each_ssid in ssid_list:
+				for each_cron in cron_list:
+					self.reschedule(each_task, each_cron, each_ssid, given_time)
 
 		self.s.queue
     	
