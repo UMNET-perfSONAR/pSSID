@@ -1,0 +1,309 @@
+{
+    "meta_information": {
+        "probe_stats": {
+            "probe_id": "pSSID1_armored",
+            "probe_name": "pSSID1",
+            "probe_location": "s-UGLI-1007-2 ge-0/0/30",
+            "probe_ipv4": "10.30.172.108"
+            }
+    },
+
+    "amqp_url": "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu",
+
+    "archives": {
+        "rabbitmq_archive": {
+            "archiver": "rabbitmq",
+            "data": {
+                "routing-key": "pscheduler_raw",
+                "_url": "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu"
+                }
+        },
+        "syslog_archive": {
+            "archiver": "syslog",
+            "data": {
+                "ident": "pSSID test result",
+                "facility": "local3"
+                }
+        }
+
+    },
+
+    "tests": {
+        "test_rtt": {
+            "type": "rtt",
+            "spec": {
+                "dest": "www.umich.edu"
+                }
+        },
+        "latency_perfsonar_seb": {
+            "type": "latency",
+            "spec": {
+                "dest": "perfsonar-bin-seb.umnet.umich.edu"
+                }
+        },
+        "throughput_perfsonar_seb": {
+            "type": "throughput",
+            "spec": {
+                "dest": "perfsonar-bin-seb.umnet.umich.edu"
+                }
+        },
+        "http_mguest_portal": {
+            "type": "http",
+            "spec": {
+                "url": "http://portal-mguest-lb.dsc.umich.edu"
+                }
+        },
+        "test_latency": {
+            "type": "latency",
+            "spec": {
+                "dest": "perfsonar-bin-arbl.umnet.umich.edu"
+                }
+        },
+        "test_throughput_ul": {
+            "type": "throughput",
+            "spec": {
+                "dest": "perfsonar-bin-arbl.umnet.umich.edu"
+                }
+        },
+        "test_throughput_dl": {
+            "type": "throughput",
+            "spec": {
+                "source": "perfsonar-bin-arbl.umnet.umich.edu"
+                }
+        },
+        "test_http_umich": {
+            "type": "http",
+            "spec": {
+                "url": "http://umich.edu"
+                }
+        },
+        "test_http_google": {
+            "type": "http",
+            "spec": {
+                "url": "http://google.com"
+                }
+        },
+        "test_dns_a": {
+            "type": "dns",
+            "spec": {
+                "query": "www.umich.edu",
+                "record": "a"
+                }
+        },
+        "test_dns_aaaa": {
+            "type": "dns",
+            "spec": {
+                "query": "www.umich.edu",
+                "record": "aaaa"
+                }
+        }
+
+    },
+
+
+    "schedules": {
+        "schedule_every_1_min": {
+            "repeat": "*/1 * * * *"
+        },
+        "schedule_every_5_min": {
+            "repeat": "*/5 * * * *"
+        },
+        "schedule_every_10_min": {
+            "repeat": "*/10 * * * *"
+        },
+        "schedule_every_1_hour": {
+            "repeat": "0 * * * *"
+        },
+        "schedule_at_minute_10": {
+            "repeat": "10 * * * *"
+        },
+        "schedule_at_minute_20": {
+            "repeat": "20 * * * *"
+        },
+        "schedule_at_minute_30": {
+            "repeat": "30 * * * *"
+        },
+        "schedule_at_minute_40": {
+            "repeat": "40 * * * *"
+        },
+        "schedule_at_minute_50": {
+            "repeat": "50 * * * *"
+        },
+        "schedule_every_2_hours": {
+            "repeat": "0 */2 * * *"
+        },
+        "schedule_every_4_hours": {
+            "repeat": "0 */4 * * *"
+        },
+        "schedule_every_5_hours": {
+            "repeat": "0 */5 * * *"
+        },
+        "schedule_Tuesday_10AM": {
+            "repeat": "0 10 * * 2"
+        },
+        "schedule_Tuesday_10:10AM": {
+            "repeat": "10 10 * * 2"
+        }
+
+    },
+
+    "BSSID_channels": {
+        "eduroam_channels": [1, 6, 11, 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165],
+        "MWireless_channels": [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165],
+        "MSetup_channels": [1, 6, 11, 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165],
+        "MGuest_channels": [1, 6, 11, 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165]
+
+    },
+
+    "SSID_profiles" : {
+        "MWireless_profile": {
+            "SSID": "MWireless",
+            "channels": "MWireless_channels",
+            "channel_mismatch_warning": true,
+            "channel_mismatch_connect": false,
+            "min_signal": -85,
+            "min_qualifying": 2,
+            "AuthMethod": {
+                "type": "user",
+                "identity": "wifi-pi-test",
+                "password": "hash:b8206c7ddd1d83953dc00d3ca10e0af4",
+                "connection_flags": {
+                    "paranoid": false,
+                    "pscheduler_restart": false,
+                    "apache_restart": false,
+                    "postgres_restart": false,
+                    "wait_time": 0
+                }
+            }
+        },
+        "eduroam_profile": {
+            "SSID": "eduroam",
+            "channels": "eduroam_channels",
+            "channel_mismatch_warning": true,
+            "channel_mismatch_connect": false,
+            "min_signal": -85,
+            "min_qualifying": 2,
+            "AuthMethod": {
+                "type": "user",
+                "identity": "wifi-pi-test@umich.edu",
+                "password": "hash:b8206c7ddd1d83953dc00d3ca10e0af4",
+                "connection_flags": {
+                    "paranoid": true,
+                    "pscheduler_restart": false,
+                    "apache_restart": false,
+                    "postgres_restart": false,
+                    "wait_time": 0
+                }
+            }
+        },
+        "MSetup_profile": {
+            "SSID": "MSetup",
+            "channels": "MSetup_channels",
+            "channel_mismatch_warning": true,
+            "channel_mismatch_connect": false,
+            "min_signal": -85,
+            "min_qualifying": 2,
+            "AuthMethod": {
+                "type": "macaddress",
+                "num_addresses": 3,
+                "macaddresses": [
+                "00:00:00:00:00:00",
+                "00:00:00:00:00:00",
+                "00:00:00:00:00:00"
+                ],
+                "connection_flags": {
+                    "paranoid": true,
+                    "pscheduler_restart": false,
+                    "apache_restart": false,
+                    "postgres_restart": false,
+                    "wait_time": 0
+                }
+            }
+        },
+        "MGuest_profile": {
+            "SSID": "MGuest",
+            "channels": "MGuest_channels",
+            "channel_mismatch_warning": true,
+            "channel_mismatch_connect": false,
+            "min_signal": -65,
+            "min_qualifying": 2,
+            "AuthMethod": {
+                "type": "captive_portal",
+                "search_exp": "switch_url=(.+?)&",
+                "connection_flags": {
+                    "paranoid": true,
+                    "pscheduler_restart": false,
+                    "apache_restart": false,
+                    "postgres_restart": false,
+                    "wait_time": 0
+                }
+            }
+        }
+
+    },
+
+    "SSID_groups": {
+        "all_profiles": ["eduroam_profile","MWireless_profile","MSetup_profile", "MGuest"],
+        "WPA_encrypted_profiles": ["eduroam_profile","MWireless_profile"]
+
+    },
+
+    "network_interfaces": {
+        "primary_network_interface": "wlan0",
+        "secondary_network_interface": "wlan1"
+
+    },
+
+    "BSSID_scans" : {
+        "primary_BSSIDs": {
+            "interface":"primary_network_interface",
+            "profiles": "all_profiles",
+            "unknown_SSID_warning": true,
+            "schedule": ["schedule_every_5_min"],
+            "priority": 1,
+            "meta_information": "probe_stats"
+
+        }
+
+    },
+
+    "tasks": {
+        "throughput": {
+            "profiles":"all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "test": ["throughput_perfsonar_seb"],
+            "archives": ["rabbitmq_archive","syslog_archive"],
+            "schedule": ["schedule_every_1_hour","schedule_at_minute_30"],
+            "priority": 2,
+            "ttl": 120,
+            "meta_information": "probe_stats",
+            "throughput_threshold": 95000000
+
+
+        },
+        "latency": {
+            "profiles":"all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "test": ["latency_perfsonar_seb"],
+            "archives": ["rabbitmq_archive","syslog_archive"],
+            "schedule": ["schedule_at_minute_10","schedule_at_minute_40"],
+            "priority": 3,
+            "ttl": 120,
+            "meta_information": "probe_stats"
+
+        },
+        "http": {
+            "profiles":"all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "test": ["http_mguest_portal"],
+            "archives": ["rabbitmq_archive","syslog_archive"],
+            "schedule": ["schedule_at_minute_20","schedule_at_minute_50"],
+            "priority": 4,
+            "ttl": 120,
+            "meta_information": "probe_stats"
+
+        }
+
+    }
+
+}
