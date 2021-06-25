@@ -148,6 +148,7 @@ def prepare_connection(ssid, bssid, interface, auth):
     run_wpa_supplicant = ('wpa_supplicant -B -c ' + wpa_supp_path + \
         ' -i ' + interface)
     dhclient = ('dhclient ' + interface)
+    kill_dhclient = 'killall dhclient'
     dhclient_release = ('dhclient -r ' + interface)
 
     # import pdb; pdb.set_trace()
@@ -155,7 +156,8 @@ def prepare_connection(ssid, bssid, interface, auth):
         return return_and_log(connected, json_info)
     
     try:
-        subprocess_calls(dhclient_release, False)
+        subprocess_calls(dhclient_release, True)
+        subprocess_calls(kill_dhclient, False)
         subprocess_calls('ip route del default', False)
 
         interface_path = '/var/run/wpa_supplicant/wlan0'
