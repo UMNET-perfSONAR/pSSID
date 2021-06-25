@@ -165,8 +165,8 @@
             "min_qualifying": 2,
             "AuthMethod": {
                 "type": "user",
-                "identity": "wifi-pi-test",
-                "password": "hash:b8206c7ddd1d83953dc00d3ca10e0af4",
+                "identity": "vaulted",
+                "password": "vaulted",
                 "connection_flags": {
                     "paranoid": false,
                     "pscheduler_restart": false,
@@ -185,8 +185,8 @@
             "min_qualifying": 2,
             "AuthMethod": {
                 "type": "user",
-                "identity": "wifi-pi-test@umich.edu",
-                "password": "hash:b8206c7ddd1d83953dc00d3ca10e0af4",
+                "identity": "vaulted",
+                "password": "vaulted",
                 "connection_flags": {
                     "paranoid": true,
                     "pscheduler_restart": false,
