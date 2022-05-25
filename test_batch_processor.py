@@ -49,9 +49,9 @@ batch = {
 
             "label": "noop",
             "iterations": 1,
-            "parallel": true,
+            "parallel": "true",
             "backoff": "PT1S",
-            "sync-start": true,
+            "sync-start": "true",
             "task": {
                 "test": {
                     "type": "noop",
@@ -68,7 +68,7 @@ batch = {
         {
             "label": "tasks",
             "iterations": 3,
-            "enabled": true,
+            "enabled": "true",
             "task": {
                         "reference":{
                                 "tests":[
