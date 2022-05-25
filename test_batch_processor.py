@@ -1,21 +1,15 @@
 #!/usr/bin/env python3
-
 import pscheduler.batchprocessor
 import sys
 import json
-
-batch = """{
+batch = r"""{
     "schema": 2,
-
-
     "global": {
-
         "data": {
         "count_multiplier": 1,
             "sponsor": "This measurement is brought to you by perfSONAR.",
             "dest": "ubuntu182"
         },
-
         "transform-pre": {
             "script": [
                 "  .reference.before = \"This was inserted first.\"",
@@ -23,7 +17,6 @@ batch = """{
                 "| .reference.iteration = $iteration"
             ]
         },
-
         "transform-post": {
             "script": [
                 "  .reference.after = \"This was inserted last.\"",
@@ -33,10 +26,7 @@ batch = """{
                 "    else . end"
             ]
         }
-
-
     },
-
     "jobs": [
 
         {
@@ -119,4 +109,4 @@ processor = pscheduler.batchprocessor.BatchProcessor(actual_batch)
 # This can be invoked multiple times to run the same batch repeatedly.
 result = processor(debug=debug)
 
-print(result)
+print(actual_batch)
