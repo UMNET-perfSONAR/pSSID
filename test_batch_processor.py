@@ -118,7 +118,7 @@ def debug(message):
     """
     print(message, file=sys.stderr)
 
-processor = python-pscheduler.batchprocessor.BatchProcessor(batch)
+processor = pscheduler.batchprocessor.BatchProcessor(batch)
 
 # Leave out the debug argument for no debugging.
 # This can be invoked multiple times to run the same batch repeatedly.
