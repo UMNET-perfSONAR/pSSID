@@ -2,9 +2,9 @@
 
 import pscheduler.batchprocessor
 import sys
+import json
 
-
-batch = {
+batch = """{
     "schema": 2,
 
 
@@ -101,7 +101,9 @@ batch = {
     }
         }
     ]
-}
+}"""
+
+
 
 def debug(message):
     """
@@ -110,7 +112,8 @@ def debug(message):
     """
     print(message, file=sys.stderr)
 
-processor = pscheduler.batchprocessor.BatchProcessor(batch)
+actual_batch = json.loads(batch)
+processor = pscheduler.batchprocessor.BatchProcessor(actual_batch)
 
 # Leave out the debug argument for no debugging.
 # This can be invoked multiple times to run the same batch repeatedly.
