@@ -7,19 +7,15 @@ import sys
 batch = {
     "schema": 2,
 
-    "#": "Suggested invocation:",
-    "#": "pscheduler batch --debug test-input",
 
     "global": {
 
-        "#": "This is made available to all transforms as $global.",
         "data": {
         "count_multiplier": 1,
             "sponsor": "This measurement is brought to you by perfSONAR.",
             "dest": "ubuntu182"
         },
 
-        "#": "This is applied to all tasks before their task-transform",
         "transform-pre": {
             "script": [
                 "  .reference.before = \"This was inserted first.\"",
@@ -28,12 +24,10 @@ batch = {
             ]
         },
 
-        "#": "This is applied to all tasks after their task-transform",
         "transform-post": {
             "script": [
                 "  .reference.after = \"This was inserted last.\"",
 
-                "# Apply the destination",
                 "| if (.test.spec | has(\"dest\"))",
                 "    then .test.spec.dest = $global.dest",
                 "    else . end"
@@ -102,8 +96,6 @@ batch = {
         },
             "task-transform": {
         "script": [
-            "# Replace the test section of the task with one of the",
-            "# tests in the reference block based on the iteration.",
             ".test = .reference.tests[$iteration]"
         ]
     }
