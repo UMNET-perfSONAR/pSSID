@@ -117,7 +117,7 @@ args = parser.parse_args()
 # call function in parse_config.py
 # parse_config.py sub-main will validate that the config file is correct
 config_file = open(args.file, "r")
-actual_batch = json.loads(config_file)
+actual_batch = json.loads(config_file.read())
 processor = pscheduler.batchprocessor.BatchProcessor(actual_batch)
 
 # Leave out the debug argument for no debugging.
