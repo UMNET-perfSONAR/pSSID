@@ -149,7 +149,7 @@ batch_temp = {
 for tests in parsed_file.active_batches:
     
     job_instance = {
-            "label": "label",
+            "label": tests,
             "parallel": True,
             "task": []
         }

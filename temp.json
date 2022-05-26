@@ -23,6 +23,19 @@
       "label": "label",
       "parallel": true,
       "task": [
+        { "test": { "type": "rtt", "spec": { "dest": "www.umich.edu" } } },
+        {
+          "test": {
+            "type": "latency",
+            "spec": { "dest": "perfsonar-bin-seb.umnet.umich.edu" }
+          }
+        }
+      ]
+    },
+    {
+      "label": "label",
+      "parallel": true,
+      "task": [
         {
           "test": {
             "type": "throughput",
