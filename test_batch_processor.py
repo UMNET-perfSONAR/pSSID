@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from parse_config import Parse, tests
 import argparse
-#import pscheduler.batchprocessor
+import pscheduler.batchprocessor
 import sys
 import json
 batch = r"""{
