@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
+from parse_config import Parse, tests
 import argparse
-import pscheduler.batchprocessor
+#import pscheduler.batchprocessor
 import sys
 import json
-from parse_config import Parse, tests
-
-
 batch = r"""{
     "schema": 2,
     "global": {
@@ -117,16 +115,7 @@ args = parser.parse_args()
 # call function in parse_config.py
 # parse_config.py sub-main will validate that the config file is correct
 config_file = open(args.file, "r")
-actual_batch = json.loads(config_file.read())
-processor = pscheduler.batchprocessor.BatchProcessor(actual_batch)
-
-# Leave out the debug argument for no debugging.
-# This can be invoked multiple times to run the same batch repeatedly.
-result = processor(debug=debug)
-
-print(actual_batch)
-
-#parsed_file = Parse(config_file)
+parsed_file = Parse(config_file)
 config_file.close()
 
 
@@ -157,10 +146,26 @@ batch_temp = {
                         "jobs": []
                     }
 
-# for test in parsed_file["batches"]:
-#     for job in parsed_file["batch-definitions"][test]["jobs"]:
+for tests in parsed_file.active_batches:
+    
+    job_instance = {
+            "label": "label",
+            "parallel": True,
+            "task": []
+        }
+    for job in parsed_file.batches[tests]["jobs"]: 
+        job_instance["task"].append(parsed_file.tests[job]) 
+    
+    batch_temp["jobs"].append(job_instance)
 
-#     batch_temp["jobs"].append(test)
 
+json_str = json.dumps(batch_temp)
 
+print(json_str)
+processor = pscheduler.batchprocessor.BatchProcessor(batch_temp)
 
+# Leave out the debug argument for no debugging.
+# This can be invoked multiple times to run the same batch repeatedly.
+result = processor(debug=debug)
+
+#print(actual_batch)
