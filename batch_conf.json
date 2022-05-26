@@ -83,18 +83,29 @@
                                 "dest": "ubuntu182"
                                 }
                             }
+                        },
+                        {
+                            "test": {
+                                "type": "throughput",
+                                "spec": {
+                                        "dest": "ubuntu182",
+                                        "duration": "PT1M"
+                                }
+                            }
+                        },
+                        {
+                            "test": {
+                                "type": "trace",
+                                "spec": {
+                                "schema": 1,
+                                "dest": "ubuntu182"
+                                }
+                            }
                         }
             ],
          "continue-if": {
                 "script": ".[0].runs[0].\"application/json\".succeeded"
-        },
-            "task-transform": {
-        "script": [
-            "# Replace the test section of the task with one of the",
-            "# tests in the reference block based on the iteration.",
-            ".test = .reference.tests[$iteration]"
-        ]
-    }
         }
+    }
     ]
 }
