@@ -3,6 +3,9 @@ import argparse
 import pscheduler.batchprocessor
 import sys
 import json
+from parse_config import Parse, tests
+
+
 batch = r"""{
     "schema": 2,
     "global": {
@@ -114,7 +117,16 @@ args = parser.parse_args()
 # call function in parse_config.py
 # parse_config.py sub-main will validate that the config file is correct
 config_file = open(args.file, "r")
-parsed_file = Parse(config_file)
+actual_batch = json.loads(config_file)
+processor = pscheduler.batchprocessor.BatchProcessor(actual_batch)
+
+# Leave out the debug argument for no debugging.
+# This can be invoked multiple times to run the same batch repeatedly.
+result = processor(debug=debug)
+
+print(actual_batch)
+
+#parsed_file = Parse(config_file)
 config_file.close()
 
 
@@ -152,11 +164,3 @@ batch_temp = {
 
 
 
-actual_batch = json.loads(batch)
-processor = pscheduler.batchprocessor.BatchProcessor(actual_batch)
-
-# Leave out the debug argument for no debugging.
-# This can be invoked multiple times to run the same batch repeatedly.
-result = processor(debug=debug)
-
-print(actual_batch)
