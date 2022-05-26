@@ -74,6 +74,7 @@
         {
             "label": "tasks",
             "enabled": true,
+            "parallel": true,
             "task": [
                         {       
                             "test": {            
