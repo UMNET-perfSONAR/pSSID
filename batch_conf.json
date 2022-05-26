@@ -37,7 +37,6 @@
         {
 
             "label": "noop",
-            "iterations": 1,
             "parallel": true,
             "backoff": "PT1S",
             "sync-start": true,
@@ -56,7 +55,6 @@
         {
 
             "label": "noop",
-            "iterations": 1,
             "parallel": true,
             "backoff": "PT1S",
             "sync-start": true,
@@ -77,26 +75,31 @@
             "label": "tasks",
             "enabled": true,
             "task": [
-                        {                   
+                        {       
+                            "test": {            
                                 "type": "rtt",
                                 "spec": {
                                 "dest": "ubuntu182"
                                 }
+                            }
                         },
                         {
+                            "test": {
                                 "type": "throughput",
                                 "spec": {
                                         "dest": "ubuntu182",
                                         "duration": "PT1M"
                                 }
+                            }
                         },
                         {
+                            "test": {
                                 "type": "trace",
                                 "spec": {
                                 "schema": 1,
                                 "dest": "ubuntu182"
                                 }
-
+                            }
                         }
             ],
          "continue-if": {
