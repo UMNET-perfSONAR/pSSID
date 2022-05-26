@@ -207,7 +207,7 @@
         "example-batch-basic": {
             "profiles": ["MWireless-profile"],
             "BSSIDs": "primary-BSSIDs",
-            "jobs": [ "test-rtt" ],
+            "jobs": [ "test-rtt" , "latency_perfsonar_seb"],
             "archives": [ "example-rabbitmq-archive", "example-syslog-archive" ],
             "schedule": [ "schedule-every-1-hour", "schedule-Tuesday-10:10AM" ],
             "priority": 3,
@@ -248,6 +248,7 @@
     },
 
     "batches": [
+        "example-batch-basic",
         "throughput",
         "http"
     ]

@@ -24,8 +24,10 @@
       "parallel": true,
       "task": [
         {
-          "type": "throughput",
-          "spec": { "dest": "perfsonar-bin-seb.umnet.umich.edu" }
+          "test": {
+            "type": "throughput",
+            "spec": { "dest": "perfsonar-bin-seb.umnet.umich.edu" }
+          }
         }
       ]
     },
@@ -34,8 +36,10 @@
       "parallel": true,
       "task": [
         {
-          "type": "http",
-          "spec": { "url": "http://portal-mguest-lb.dsc.umich.edu" }
+          "test": {
+            "type": "http",
+            "spec": { "url": "http://portal-mguest-lb.dsc.umich.edu" }
+          }
         }
       ]
     }
