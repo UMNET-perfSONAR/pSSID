@@ -1,0 +1,236 @@
+{
+    "meta-definitions":{
+        "probe-stats": {
+    	    "probe-name": "RPi1",
+    	    "probe-location": "Winterhall"
+    	}
+    },
+    
+    "amqp_url": "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu",
+
+    "bssid-scan-definitions" : {
+    	"primary-bssids": {
+    	    "interface": "primary-network-interfaces",
+    	    "profiles": "all-profiles",
+    	    "unknown-ssid-warning": true,
+    	    "schedule": [ "schedule-every-5-min" ],
+    	    "priority": 1,
+            "meta-info": "probe-stats"
+    	}
+    },
+
+    "archiver-definitions": {
+        "example-rabbitmq-archive": {
+            "archiver": "rabbitmq",
+            "data": {
+                "_url": "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu",
+                "routing-key": "pscheduler_raw"                
+            }
+        },
+        "example-syslog-archive": {
+            "archiver": "syslog",
+            "data": {
+                "ident": "pSSID22 result",
+                "facility" : "local3"
+            }
+        }
+    },
+
+
+    "schedule-definitions": {
+        "schedule-every-1-min": {
+            "repeat": "*/1 * * * *"
+        },
+        "schedule-every-5-min": {
+            "repeat": "*/5 * * * *"
+        },
+        "schedule-every-10-min": {
+            "repeat": "*/10 * * * *"
+        },
+        "schedule-every-1-hour": {
+            "repeat": "0 * * * *"
+        }, 
+        "schedule-every-2-hours": {
+            "repeat": "0 */2 * * *"
+        },
+        "schedule-every-4-hours": {
+            "repeat": "0 */4 * * *"
+        }, 
+        "schedule-every-5-hours": {
+            "repeat": "0 */5 * * *"
+        },  
+        "schedule-Tuesday-10AM": {
+            "repeat": "0 10 * * 2"
+        },   
+        "schedule-Tuesday-10:10AM": {
+            "repeat": "10 10 * * 2"
+        }        
+    },
+
+    "bssid-channel-definitions": {
+    	"EduRoam-channels": [ 11, 12, 13, 14, 15 ],
+    	"MWireless-channels": [ 1, 2, 3, 4, 5, 10, 64, 11, 44, 36 ]
+    },
+
+    "ssid-profile-definitions" : {
+        "MWireless-profile": {
+            "ssid": "MWireless",
+            "channels": "MWireless-channels",
+            "channel-mismatch-warning": true,
+            "channel-mismatch-connect": false,
+            "min-signal": -73,
+            "min-qualifying": 5, 
+            "auth-method": {
+                "type": "User",
+                "uid": "fakeUID",
+                "password": "fakepassword",
+                "connection-flags": {
+                    "paranoid": false,
+                    "pscheduler-restart": false,
+                    "apache-restart": false,
+                    "postgres-restart": false,
+                    "wait-time": 0
+                }
+            }
+        },
+
+        "EduRoam-profile": {
+            "ssid": "eduroam",
+            "channels": "EduRoam-channels",
+            "channel-mismatch-warning": true,
+            "channel-mismatch-connect": false,
+            "min-signal": -70,
+            "min-qualifying": 5,
+            "auth-method": {
+                "type": "User",
+                "uid": "fakeUID",
+                "password": "fakepassword",
+                "connection-flags": {
+                    "paranoid": true,
+                    "pscheduler-restart": false,
+                    "apache-restart": false,
+                    "postgres-restart": false,
+                    "wait-time": 0
+                }
+            }
+        }
+    },
+
+    "ssid-group-definitions": {
+	   "all-profile": ["EduRoam-profile", "MWireless-profile"]
+    },
+
+    "network-interface-definitions": {
+    	"primary-network-interface": "wlan0",
+    	"future-network-interface": "wlan1"
+    },
+
+    "test-definitions": {
+        "example-test-rtt": {
+            "type": "rtt",
+            "spec": {
+                "dest": "www.umich.edu"
+            }
+        },
+        "example-test-latency": {
+            "type": "latency",
+            "spec": {
+                "dest": "perfsonar-bin-arbl.umnet.umich.edu"
+            }
+        },
+        "example-test-throughput-ul": {
+            "type": "throughput",
+            "spec": {
+                "dest": "perfsonar-bin-arbl.umnet.umich.edu"
+            }
+        },
+        "example-test-throughput-dl": {
+            "type": "throughput",
+            "spec": {
+                "source": "perfsonar-bin-arbl.umnet.umich.edu"
+            }
+        },
+        "example-test-http-umich":{
+            "type": "http",
+            "spec": {
+                "url": "http://umich.edu"
+            }
+        },
+        "example-test-http-google":{
+            "type": "http",
+            "spec": {
+                "url": "http://google.com"
+            }
+        },
+        "example-test-dns-a":{
+            "type": "dns",
+            "spec": {
+                "query": "www.umich.edu",
+                "record": "a"
+            }
+        },
+        "example-test-dns-aaaa":{
+            "type": "dns",
+            "spec": {
+                "query": "www.umich.edu",
+                "record": "aaaa"
+            }
+        }
+    },
+
+    "job-definitions": {
+        "basic-test-suite": {
+            "tests": [ "example-test-dns-a", "example-test-http-google" ],
+            "continue-if": "$script"
+        }
+    },
+
+    "batch-definitions": {
+        "example-batch-basic": {
+            "profiles": ["MWireless-profile"],
+            "BSSIDs": "primary-BSSIDs",
+            "jobs": [ "example-job-rtt" ],
+            "archives": [ "example-rabbitmq-archive", "example-syslog-archive" ],
+            "schedule": [ "schedule-every-1-hour", "schedule-Tuesday-10:10AM" ],
+            "priority": 3,
+            "ttl": 45,
+            "meta-info": "probe-stats"
+        },
+        "throughput": {
+            "profiles":"all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "jobs": ["throughput_perfsonar_seb"],
+            "archives": ["rabbitmq_archive","syslog_archive"],
+            "schedule": ["schedule_every_1_hour","schedule_at_minute_30"],
+            "priority": 2,
+            "ttl": 120,
+            "meta_information": "probe_stats",
+            "throughput_threshold": 95000000
+        },
+        "latency": {
+            "profiles":"all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "jobs": ["latency_perfsonar_seb"],
+            "archives": ["rabbitmq_archive","syslog_archive"],
+            "schedule": ["schedule_at_minute_10","schedule_at_minute_40"],
+            "priority": 3,
+            "ttl": 120,
+            "meta_information": "probe_stats"
+        },
+        "http": {
+            "profiles":"all_profiles",
+            "BSSIDs": "primary_BSSIDs",
+            "jobs": ["http_mguest_portal"],
+            "archives": ["rabbitmq_archive","syslog_archive"],
+            "schedule": ["schedule_at_minute_20","schedule_at_minute_50"],
+            "priority": 4,
+            "ttl": 120,
+            "meta_information": "probe_stats"
+        }
+    },
+
+    "batches": [
+        "first batch name",
+        "second batch name"
+    ]
+} 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import pscheduler.batchprocessor
 import sys
 import json
@@ -101,6 +102,55 @@ def debug(message):
     debug.
     """
     print(message, file=sys.stderr)
+
+parser = argparse.ArgumentParser(description='pSSID')
+parser.add_argument('file', action='store',
+  help='json file')
+parser.add_argument('--debug', action='store_true',
+  help='sanity check')
+args = parser.parse_args()
+
+# read config file
+# call function in parse_config.py
+# parse_config.py sub-main will validate that the config file is correct
+config_file = open(args.file, "r")
+parsed_file = Parse(config_file)
+config_file.close()
+
+
+batch_temp = {
+                        "schema": 2,
+                        "global": {
+                            "data": {
+                            "count_multiplier": 1,
+                                "dest": "ubuntu182"
+                            },
+                            "transform-pre": {
+                                "script": [
+                                    "  .reference.before = \"This was inserted first.\"",
+                                    "| .reference.sponsor = $global.sponsor",
+                                    "| .reference.iteration = $iteration"
+                                ]
+                            },
+                            "transform-post": {
+                                "script": [
+                                    "  .reference.after = \"This was inserted last.\"",
+
+                                    "| if (.test.spec | has(\"dest\"))",
+                                    "    then .test.spec.dest = $global.dest",
+                                    "    else . end"
+                                ]
+                            }
+                        },
+                        "jobs": []
+                    }
+
+# for test in parsed_file["batches"]:
+#     for job in parsed_file["batch-definitions"][test]["jobs"]:
+
+#     batch_temp["jobs"].append(test)
+
+
 
 actual_batch = json.loads(batch)
 processor = pscheduler.batchprocessor.BatchProcessor(actual_batch)
