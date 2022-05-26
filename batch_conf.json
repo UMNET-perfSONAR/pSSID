@@ -83,24 +83,6 @@
                                 "dest": "ubuntu182"
                                 }
                             }
-                        },
-                        {
-                            "test": {
-                                "type": "throughput",
-                                "spec": {
-                                        "dest": "ubuntu182",
-                                        "duration": "PT1M"
-                                }
-                            }
-                        },
-                        {
-                            "test": {
-                                "type": "trace",
-                                "spec": {
-                                "schema": 1,
-                                "dest": "ubuntu182"
-                                }
-                            }
                         }
             ],
          "continue-if": {
