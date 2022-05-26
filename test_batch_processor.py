@@ -154,7 +154,10 @@ for tests in parsed_file.active_batches:
             "task": []
         }
     for job in parsed_file.batches[tests]["jobs"]: 
-        job_instance["task"].append(parsed_file.tests[job]) 
+        test_instance = {
+            "test": parsed_file.tests[job]
+        }
+        job_instance["task"].append(test_instance) 
     
     batch_temp["jobs"].append(job_instance)
 
