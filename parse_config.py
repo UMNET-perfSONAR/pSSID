@@ -1,7 +1,7 @@
 
 import psjson
 import traceback
-from crontab import CronTab
+from croniter import croniter
 import sys
 import argparse
 
@@ -32,7 +32,7 @@ def scan_bssids(self):
             schedlist = scan_profile["schedule"]
             for j in schedlist:
                 scansched = self.schedules[j]
-                cron_list.append(CronTab(str(scansched["repeat"])))
+                cron_list.append(croniter(str(scansched["repeat"])))
 
             scan_obj["schedule"] = cron_list
         except:
@@ -95,10 +95,10 @@ class Parse:
         """
         try:
             cron_list = []
-            schedlist = self.tasks[given_task]["schedule"]
+            schedlist = self.batches[given_task]["schedule"]
             for i in schedlist:
-                tasksched = self.schedules[i]
-                cron_list.append(CronTab(str(tasksched["repeat"])))
+                cronline = self.schedules[i]
+                cron_list.append(croniter(str(cronline["repeat"])))
         except:
             print("ERROR in retrieving \"schedule\" from", given_task)
             print(traceback.print_exc())
@@ -197,8 +197,8 @@ class Parse:
         option to return list of pSSID task objects. Dict keys: TASK, Sched, SSIDS
         """
         TASKS = []
-        for eachtask in self.tasks:
-            for eachtest in self.tasks[eachtask]["test"]:
+        for eachbatch in self.active_batches:
+            for eachtest in self.batches[eachbatch]["test"]:
                 TASKS.append(self.create_pSSID_task(eachtask, eachtest))
 
         return TASKS

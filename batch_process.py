@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 from parse_config import Parse, tests
+from batch import Batch
 import argparse
 import pscheduler.batchprocessor
 import sys
 import json
+
+from schedule import Schedule
+
 batch = r"""{
     "schema": 2,
     "global": {
@@ -118,6 +122,10 @@ config_file = open(args.file, "r")
 parsed_file = Parse(config_file)
 config_file.close()
 
+schedule = Schedule(parsed_file)
+schedule.initial_schedule()
+
+
 
 batch_temp = {
                         "schema": 2,
@@ -145,30 +153,62 @@ batch_temp = {
                         },
                         "jobs": []
                     }
+def create_single_batch():
+    batch_config = {
+                        "schema": 2,
+                        "global": {
+                            "data": {
+                            "count_multiplier": 1,
+                                "dest": "ubuntu182"
+                            },
+                            "transform-pre": {
+                                "script": [
+                                    "  .reference.before = \"This was inserted first.\"",
+                                    "| .reference.sponsor = $global.sponsor",
+                                    "| .reference.iteration = $iteration"
+                                ]
+                            },
+                            "transform-post": {
+                                "script": [
+                                    "  .reference.after = \"This was inserted last.\"",
 
-for tests in parsed_file.active_batches:
+                                    "| if (.test.spec | has(\"dest\"))",
+                                    "    then .test.spec.dest = $global.dest",
+                                    "    else . end"
+                                ]
+                            }
+                        },
+                        "jobs": []
+                    }
     
-    job_instance = {
-            "label": tests,
-            "parallel": True,
-            "task": []
-        }
-    for job in parsed_file.batches[tests]["jobs"]: 
-        test_instance = {
-            "test": parsed_file.tests[job]
-        }
-        job_instance["task"].append(test_instance) 
-    
-    batch_temp["jobs"].append(job_instance)
 
 
-json_str = json.dumps(batch_temp)
 
-print(json_str)
-processor = pscheduler.batchprocessor.BatchProcessor(batch_temp)
+def run_batch_process():
 
-# Leave out the debug argument for no debugging.
-# This can be invoked multiple times to run the same batch repeatedly.
-result = processor(debug=debug)
+    for tests in parsed_file.active_batches:
+        
+        job_instance = {
+                "label": tests,
+                "parallel": True,
+                "task": []
+            }
+        for job in parsed_file.batches[tests]["jobs"]: 
+            test_instance = {
+                "test": parsed_file.tests[job]
+            }
+            job_instance["task"].append(test_instance) 
+        
+        batch_temp["jobs"].append(job_instance)
+
+
+    json_str = json.dumps(batch_temp)
+
+    print(json_str)
+    processor = pscheduler.batchprocessor.BatchProcessor(batch_temp)
+
+    # Leave out the debug argument for no debugging.
+    # This can be invoked multiple times to run the same batch repeatedly.
+    result = processor(debug=debug)
 
 #print(actual_batch)
