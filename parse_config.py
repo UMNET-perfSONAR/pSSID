@@ -284,7 +284,7 @@ class Parse:
         """
         taskobj = {}
         taskobj["name"] = given_task
-        taskobj["TASK"] = self.create_pScheduler_batch(given_task)
+        taskobj["BATCH"] = self.create_pScheduler_batch(given_task)
         taskobj["schedule"] = self.schedule_for_task(given_task)
 
         # includes SSID profiles object infomartion

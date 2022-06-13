@@ -17,7 +17,7 @@ class Schedule:
 		print (print_syslog)
 		#sending batch to pscheduler
 		
-		processor = pscheduler.batchprocessor.BatchProcessor(batch)
+		processor = pscheduler.batchprocessor.BatchProcessor(batch["BATCH"])
 		result = processor(debug=debug)
 		
 		priority = batch["priority"]
