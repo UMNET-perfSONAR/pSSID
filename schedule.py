@@ -38,7 +38,7 @@ class Schedule:
 		if given_time > time.time():
 			set_time = given_time
 		
-		schedule_time =  set_time  + given_cron.get_next()
+		schedule_time =  set_time  + given_cron.next(set_time)
 		self.s.enterabs(schedule_time, given_obj["priority"], run_schedule, argument = (given_obj,given_cron,given_ssid, scan))
 
 
@@ -123,7 +123,7 @@ class Schedule:
 		while fake_time < end_time:
 			min_time = end_time
 			for test in temp2:
-				curr_time = test["prev"] + test["i"].argument[1].get_next()
+				curr_time = test["prev"] + test["i"].argument[1].next(test["prev"])
 				test["prev"] = curr_time
 				min_time = min(min_time, curr_time)
 

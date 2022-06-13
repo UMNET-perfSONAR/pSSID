@@ -1,7 +1,7 @@
 
 import psjson
 import traceback
-from croniter import croniter
+from crontab import CronTab
 import sys
 import argparse
 
@@ -32,7 +32,7 @@ def scan_bssids(self):
             schedlist = scan_profile["schedule"]
             for j in schedlist:
                 scansched = self.schedules[j]
-                cron_list.append(croniter(str(scansched["repeat"])))
+                cron_list.append(CronTab(str(scansched["repeat"])))
 
             scan_obj["schedule"] = cron_list
         except:
@@ -79,7 +79,7 @@ class Parse:
             self.batches = json_obj["batch-definitions"]
             self.active_batches = json_obj["batches"]
             
-            self.all_scans = scan_bssids(self)
+            # self.all_scans = scan_bssids(self)
 
 
         except:
@@ -98,7 +98,7 @@ class Parse:
             schedlist = self.batches[given_task]["schedule"]
             for i in schedlist:
                 cronline = self.schedules[i]
-                cron_list.append(croniter(str(cronline["repeat"])))
+                cron_list.append(CronTab(str(cronline["repeat"])))
         except:
             print("ERROR in retrieving \"schedule\" from", given_task)
             print(traceback.print_exc())
@@ -127,6 +127,8 @@ class Parse:
             print(traceback.print_exc())
 
         return ssids
+
+    
 
     
    
@@ -190,6 +192,109 @@ class Parse:
             taskobj["throughput_threshold"] = self.tasks[given_task]["throughput_threshold"]
 
         return taskobj
+    
+    
+    def create_pScheduler_batch(self, eachbatch):
+
+        batch_temp = {
+                        "schema": 2,
+                        "global": {
+                            "data": {
+                            "count_multiplier": 1,
+                                "dest": "ubuntu182"
+                            },
+                            "transform-pre": {
+                                "script": [
+                                    "  .reference.before = \"This was inserted first.\"",
+                                    "| .reference.sponsor = $global.sponsor",
+                                    "| .reference.iteration = $iteration"
+                                ]
+                            },
+                            "transform-post": {
+                                "script": [
+                                    "  .reference.after = \"This was inserted last.\"",
+
+                                    "| if (.test.spec | has(\"dest\"))",
+                                    "    then .test.spec.dest = $global.dest",
+                                    "    else . end"
+                                ]
+                            }
+                        },
+                        "jobs": [
+                                    {
+                                        "label": "noop",
+                                        "parallel": True,
+                                        "backoff": "PT1S",
+                                        "sync-start": True,
+                                        "task": [{
+                                            "test": {
+                                                "type": "noop",
+                                                "spec": {
+                                                    "fail":0 
+                                                }
+                                            }}
+                                        ],
+                                        "continue-if": {
+                                                "script": ".[0].runs[0].\"application/json\".succeeded"
+                                        }
+                                    },
+                                    {
+
+                                        "label": "noop",
+                                        "parallel": True,
+                                        "backoff": "PT1S",
+                                        "sync-start": True,
+                                        "task": [{
+                                            "test": {
+                                                "type": "noop",
+                                                "spec": {
+                                                    "fail":0 
+                                                }
+                                            }}
+                                        ],
+                                        "continue-if": {
+                                                "script": ".[0].runs[0].\"application/json\".succeeded"
+                                        }
+                                    }
+                        ]
+                }
+
+        job_instance = {
+                "label": eachbatch,
+                "parallel": True,
+                "task": []
+            }
+        
+        for job in self.batches[eachbatch]["jobs"]: 
+            test_instance = {
+                "test": self.tests[job]
+            }
+            job_instance["task"].append(test_instance) 
+            
+        batch_temp["jobs"].append(job_instance)
+             
+        return batch_temp
+       
+    def create_pSSID_batch(self, given_task):
+        """
+        running this function validates SSIDs and schedule
+        TASK: contains valid pScheduler tasks
+        Sched: list of cron schedule info
+        SSIDs: list of SSIDs associated with task
+        """
+        taskobj = {}
+        taskobj["name"] = given_task
+        taskobj["TASK"] = self.create_pScheduler_batch(given_task)
+        taskobj["schedule"] = self.schedule_for_task(given_task)
+
+        # includes SSID profiles object infomartion
+        taskobj["priority"] = self.batches[given_task]["priority"]
+        taskobj["BSSIDs"] = self.batches[given_task]["BSSIDs"]
+        taskobj["ttl"] = self.batches[given_task]["ttl"]
+        # taskobj["meta"] = self.meta[self.batches[given_task]["meta_information"]]
+
+        return taskobj
+    
 
    
     def pSSID_task_list(self):
@@ -199,9 +304,19 @@ class Parse:
         TASKS = []
         for eachbatch in self.active_batches:
             for eachtest in self.batches[eachbatch]["test"]:
-                TASKS.append(self.create_pSSID_task(eachtask, eachtest))
+                TASKS.append(self.create_pSSID_task(eachbatch, eachtest))
 
         return TASKS
+    
+    def pSSID_batch_list(self):
+        """
+        option to return list of batch objects. Dict keys: TASK, Sched, SSIDS
+        """
+        BATCHES = []
+        for eachbatch in self.active_batches:
+            BATCHES.append(self.create_pSSID_batch(eachbatch))
+        return BATCHES
+
 
     
 

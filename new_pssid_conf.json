@@ -38,33 +38,48 @@
 
 
     "schedule-definitions": {
-        "schedule-every-1-min": {
+        "schedule_every_1_min": {
             "repeat": "*/1 * * * *"
         },
-        "schedule-every-5-min": {
+        "schedule_every_5_min": {
             "repeat": "*/5 * * * *"
         },
-        "schedule-every-10-min": {
+        "schedule_every_10_min": {
             "repeat": "*/10 * * * *"
         },
-        "schedule-every-1-hour": {
+        "schedule_every_1_hour": {
             "repeat": "0 * * * *"
-        }, 
-        "schedule-every-2-hours": {
+        },
+        "schedule_at_minute_10": {
+            "repeat": "10 * * * *"
+        },
+        "schedule_at_minute_20": {
+            "repeat": "20 * * * *"
+        },
+        "schedule_at_minute_30": {
+            "repeat": "30 * * * *"
+        },
+        "schedule_at_minute_40": {
+            "repeat": "40 * * * *"
+        },
+        "schedule_at_minute_50": {
+            "repeat": "50 * * * *"
+        },
+        "schedule_every_2_hours": {
             "repeat": "0 */2 * * *"
         },
-        "schedule-every-4-hours": {
+        "schedule_every_4_hours": {
             "repeat": "0 */4 * * *"
-        }, 
-        "schedule-every-5-hours": {
+        },
+        "schedule_every_5_hours": {
             "repeat": "0 */5 * * *"
-        },  
-        "schedule-Tuesday-10AM": {
+        },
+        "schedule_Tuesday_10AM": {
             "repeat": "0 10 * * 2"
-        },   
-        "schedule-Tuesday-10:10AM": {
+        },
+        "schedule_Tuesday_10:10AM": {
             "repeat": "10 10 * * 2"
-        }        
+        }       
     },
 
     "bssid-channel-definitions": {
@@ -126,6 +141,14 @@
     },
 
     "test-definitions": {
+        "layer_2":{
+            "type": "dot1x",
+            "spec":{}
+        },
+        "layer_3":{
+            "type": "dhcp",
+            "spec":{}
+        },
         "test_rtt": {
             "type": "rtt",
             "spec": {
@@ -209,8 +232,8 @@
             "BSSIDs": "primary-BSSIDs",
             "jobs": [ "test_rtt" , "latency_perfsonar_seb"],
             "archives": [ "example-rabbitmq-archive", "example-syslog-archive" ],
-            "schedule": [ "schedule-every-1-hour", "schedule-Tuesday-10:10AM" ],
-            "priority": 3,
+            "schedule": [ "schedule_every_1_min", "schedule_every_2_min" ],
+            "priority": 6,
             "ttl": 45,
             "meta-info": "probe-stats"
         },
@@ -230,7 +253,7 @@
             "BSSIDs": "primary_BSSIDs",
             "jobs": ["latency_perfsonar_seb"],
             "archives": ["rabbitmq_archive","syslog_archive"],
-            "schedule": ["schedule_at_minute_10","schedule_at_minute_40"],
+            "schedule": ["schedule_every_1_min","schedule_at_minute_40"],
             "priority": 3,
             "ttl": 120,
             "meta_information": "probe_stats"
@@ -240,8 +263,8 @@
             "BSSIDs": "primary_BSSIDs",
             "jobs": ["http_mguest_portal"],
             "archives": ["rabbitmq_archive","syslog_archive"],
-            "schedule": ["schedule_at_minute_20","schedule_at_minute_50"],
-            "priority": 4,
+            "schedule": ["schedule_every_1_min","schedule_at_minute_50"],
+            "priority": 9,
             "ttl": 120,
             "meta_information": "probe_stats"
         }

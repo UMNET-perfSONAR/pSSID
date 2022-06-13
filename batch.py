@@ -26,7 +26,7 @@ def run_batch_process():
 
 
     json_str = json.dumps(self)
-
+    
     print(json_str)
     processor = pscheduler.batchprocessor.BatchProcessor(batch_temp)
 

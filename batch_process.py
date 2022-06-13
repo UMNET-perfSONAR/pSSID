@@ -123,7 +123,7 @@ parsed_file = Parse(config_file)
 config_file.close()
 
 schedule = Schedule(parsed_file)
-schedule.initial_schedule()
+
 
 
 
