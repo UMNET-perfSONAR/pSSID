@@ -198,28 +198,6 @@ class Parse:
 
         batch_temp = {
                         "schema": 2,
-                        "global": {
-                            "data": {
-                            "count_multiplier": 1,
-                                "dest": "ubuntu182"
-                            },
-                            "transform-pre": {
-                                "script": [
-                                    "  .reference.before = \"This was inserted first.\"",
-                                    "| .reference.sponsor = $global.sponsor",
-                                    "| .reference.iteration = $iteration"
-                                ]
-                            },
-                            "transform-post": {
-                                "script": [
-                                    "  .reference.after = \"This was inserted last.\"",
-
-                                    "| if (.test.spec | has(\"dest\"))",
-                                    "    then .test.spec.dest = $global.dest",
-                                    "    else . end"
-                                ]
-                            }
-                        },
                         "jobs": [
                                     {
                                         "label": "noop",
