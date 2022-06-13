@@ -18,7 +18,7 @@ class Schedule:
 		#sending batch to pscheduler
 		
 		processor = pscheduler.batchprocessor.BatchProcessor(batch["BATCH"])
-		result = processor(debug=debug)
+		result = processor()
 		
 		priority = batch["priority"]
 		print_syslog = "rescheduled in"+str(cron.next(default_utc=True))+"seconds"
