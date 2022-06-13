@@ -19,11 +19,10 @@ class Schedule:
 		
 		processor = pscheduler.batchprocessor.BatchProcessor(batch["BATCH"])
 		result = processor()
-		
-		priority = batch["priority"]
-		print_syslog = "rescheduled in"+str(cron.next(default_utc=True))+"seconds"
+		print(result)
+		print_syslog = "rescheduled in "+str(cron.next(default_utc=True))+" seconds"
 		print (print_syslog)
-		self.s.enter(int(math.ceil(cron.next(default_utc=True))), priority, self.print_batch, argument=(batch, cron))
+		self.s.enter(int(math.ceil(cron.next(default_utc=True))), batch["priority"], self.print_batch, argument=(batch, cron))
 
 	def send_batch(self, batch):
 		self.print_event(batch)
