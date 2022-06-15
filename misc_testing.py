@@ -9,9 +9,9 @@ task = {
             "label": "wifibssid",
             "task": [{
                 "test": {
-                    "type": "wifibssid",
+                    "type": "http",
                     "spec": {
-                        "interface":"wlp0s20f0u11" 
+                       "url": "http://google.com"
                     }
                 }}
             ],
