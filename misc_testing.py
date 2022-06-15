@@ -22,5 +22,5 @@ task = {
 }
 
 processor = pscheduler.batchprocessor.BatchProcessor(task)
-result = processor(True)
+result = processor()
 print(result)
