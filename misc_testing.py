@@ -1,7 +1,26 @@
+import pscheduler.batchprocessor
 
-ssid = ","
-print(ssid)
-ssid = list(ssid.split(','))
-print(ssid)
-if ssid is None:
-    print("hello")
+task = {
+    "schema": 2,
+
+    "jobs": [
+
+        {
+            "label": "wifibssid",
+            "task": [{
+                "test": {
+                    "type": "wifibssid",
+                    "spec": {
+                        "interface":"wlp0s20f0u11" 
+                    }
+                }}
+            ],
+
+        }    
+        
+    ]
+}
+
+processor = pscheduler.batchprocessor.BatchProcessor(task)
+result = processor()
+print(result)
