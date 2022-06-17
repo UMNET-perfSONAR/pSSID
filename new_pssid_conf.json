@@ -9,11 +9,11 @@
     "amqp_url": "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu",
 
     "bssid-scan-definitions" : {
-    	"primary-bssids": {
-    	    "interface": "primary-network-interfaces",
+    	"primary_BSSIDs": {
+    	    "interface": "primary-network-interface",
     	    "profiles": "all-profiles",
-    	    "unknown-ssid-warning": true,
-    	    "schedule": [ "schedule-every-5-min" ],
+    	    "unknown_SSID_warning": true,
+    	    "schedule": [ "schedule_every_1_min" ],
     	    "priority": 1,
             "meta-info": "probe-stats"
     	}
@@ -40,6 +40,9 @@
     "schedule-definitions": {
         "schedule_every_1_min": {
             "repeat": "*/1 * * * *"
+        },
+        "schedule_every_2_min": {
+            "repeat": "*/2 * * * *"
         },
         "schedule_every_5_min": {
             "repeat": "*/5 * * * *"
@@ -132,11 +135,11 @@
     },
 
     "ssid-group-definitions": {
-	   "all-profile": ["EduRoam-profile", "MWireless-profile"]
+	   "all-profiles": ["EduRoam-profile", "MWireless-profile"]
     },
 
     "network-interface-definitions": {
-    	"primary-network-interface": "wlan0",
+    	"primary-network-interface": "wlp0s20f0u11",
     	"future-network-interface": "wlan1"
     },
 

@@ -28,12 +28,17 @@ class Schedule:
 		self.print_event(batch)
     
 	def initial_schedule(self, given_time=time.time()):
+		SCANS = self.p.all_scans
+		for each_scan in SCANS.values():
+			cron_list = each_scan["schedule"]
+			for each_cron in cron_list:
+				self.s.enterabs(given_time+int(math.ceil(each_cron.next(default_utc=True))), each_scan["priority"], self.print_batch, argument = (each_scan, each_cron))
+
 		BATCHES = self.p.pSSID_batch_list()
 		for each_batch in BATCHES:
 			cron_list = each_batch["schedule"]
-			priority = each_batch["priority"]
 			for each_cron in cron_list:
-				self.s.enterabs(given_time+int(math.ceil(each_cron.next(default_utc=True))), priority, self.print_batch, argument=(each_batch, each_cron))
+				self.s.enterabs(given_time+int(math.ceil(each_cron.next(default_utc=True))), each_batch["priority"], self.print_batch, argument=(each_batch, each_cron))
 
 	def print_queue(self):
 		for i in self.s.queue:

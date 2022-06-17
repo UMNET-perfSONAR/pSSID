@@ -1,4 +1,5 @@
 import pscheduler.batchprocessor
+import json
 
 task = {
     "schema": 2,
@@ -9,9 +10,10 @@ task = {
             "label": "wifibssid",
             "task": [{
                 "test": {
-                    "type": "http",
+                    "type": "wifibssid",
                     "spec": {
-                       "url": "http://google.com"
+                        "interface":"wlp0s20f0u11",
+                        "ssid":""
                     }
                 }}
             ],
@@ -23,4 +25,4 @@ task = {
 
 processor = pscheduler.batchprocessor.BatchProcessor(task)
 result = processor()
-print(result)
+print(json.dumps(result))

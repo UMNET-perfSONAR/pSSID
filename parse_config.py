@@ -22,7 +22,25 @@ def scan_bssids(self):
             scan_obj["profiles"] = self.SSIDs_for_profiles(scan_profile["profiles"])
             scan_obj["unknown_SSID_warning"] = scan_profile["unknown_SSID_warning"]
             scan_obj["priority"] = scan_profile["priority"]            
-            scan_obj["meta"] = self.meta[scan_profile["meta_information"]]
+            scan_obj["meta"] = self.meta[scan_profile["meta-info"]]
+            scan_obj["BATCH"] = {
+                    "schema": 2,
+                    "jobs": [
+                        {
+                            "label": i,
+                            "task": [{
+                                "test": {
+                                    "type": "wifibssid",
+                                    "spec": {
+                                        "interface": scan_obj["interface"],
+                                        "ssid":""
+                                    }
+                                }}
+                            ],
+                        } 
+                    ]
+            }
+
         except:
             print("ERROR in retrieving \"BSSID_scans\"")
             print(traceback.print_exc())
@@ -78,8 +96,7 @@ class Parse:
             self.jobs = json_obj["job-definitions"]
             self.batches = json_obj["batch-definitions"]
             self.active_batches = json_obj["batches"]
-            
-            # self.all_scans = scan_bssids(self)
+            self.all_scans = scan_bssids(self)
 
 
         except:
