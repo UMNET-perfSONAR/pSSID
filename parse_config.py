@@ -97,6 +97,7 @@ class Parse:
             self.batches = json_obj["batch-definitions"]
             self.active_batches = json_obj["batches"]
             self.all_scans = scan_bssids(self)
+            self.BSSID_list = []
 
 
         except:

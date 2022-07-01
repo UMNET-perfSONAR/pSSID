@@ -13,7 +13,7 @@
     	    "interface": "primary-network-interface",
     	    "profiles": "all-profiles",
     	    "unknown_SSID_warning": true,
-    	    "schedule": [ "schedule_every_1_min" ],
+    	    "schedule": [ "schedule_every_10_min" ],
     	    "priority": 1,
             "meta-info": "probe-stats"
     	}
@@ -146,11 +146,15 @@
     "test-definitions": {
         "layer_2":{
             "type": "dot1x",
-            "spec":{}
+            "spec":{
+                "password": "FILE_MWIRELESS_PWD"
+            }
         },
         "layer_3":{
             "type": "dhcp",
-            "spec":{}
+            "spec":{
+                
+            }
         },
         "test_rtt": {
             "type": "rtt",
