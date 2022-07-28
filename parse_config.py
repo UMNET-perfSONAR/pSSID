@@ -83,29 +83,67 @@ class Parse:
         json_obj =  psjson.json_load(source=config_file)
 
         try:
-            self.meta = json_obj["meta-definitions"]
-            self.amqp_url = json_obj["amqp_url"]
+            self.meta = json_obj["meta"]
             self.archives = json_obj["archiver-definitions"]
             self.tests = json_obj["test-definitions"]
             self.schedules = json_obj["schedule-definitions"]
-            self.BSSID_channels = json_obj["bssid-channel-definitions"]
             self.SSID_profiles = json_obj["ssid-profile-definitions"]
-            self.SSID_groups = json_obj["ssid-group-definitions"]
-            self.network_interfaces = json_obj["network-interface-definitions"]
             self.BSSID_scans = json_obj["bssid-scan-definitions"]
             self.jobs = json_obj["job-definitions"]
             self.batches = json_obj["batch-definitions"]
-            self.active_batches = json_obj["batches"]
-            self.all_scans = scan_bssids(self)
-            self.BSSID_list = []
-
-
+            self.active_batches = json_obj["active-batches"]
         except:
             print("ERROR: Make sure all fields are present")
             print(traceback.print_exc())
 
+    def get_scan(self, given_scan):
+        return self.BSSID_scans[given_scan]
+    
+    def get_archiver(self, given_archiver):
+        return self.archives[given_archiver]
 
+    def get_ssid_profile(self, given_profile):
+        return self.SSID_profiles[given_profile]
+    
+    def get_test(self, given_test):
+        return self.tests[given_test]
+    
+    def get_job(self, given_job):
+        return self.jobs[given_job]
+    
+    def create_batch_job(self, given_job):
+        """
+        Creates a job for the batch conf file
+        """
+        try:
+            job_obj = {}
+            job_obj["label"] = given_job
+            job_obj["task"] = {"reference":}
+            for eachtest in self.jobs[given_job]["test"]:
+                job_obj["task"].append(self.create_pSSID_task(given_job, eachtest))
+        except:
+            print("ERROR in creating batch job")
+            print(traceback.print_exc())
 
+        return job_obj
+
+    def create_batch_conf(self, given_batch):
+        """
+        Creates a batch configuration file for pScheduler
+        """
+        try:
+            batch_conf = {}
+            batch_conf["schema"] = 2
+            batch_conf["jobs"] = []
+            for eachtest in self.batches[given_batch]["test"]:
+                batch_conf["jobs"].append(self.create_pSSID_task(given_batch, eachtest))
+        except:
+            print("ERROR in creating batch configuration file")
+            print(traceback.print_exc())
+
+        return batch_conf
+
+    
     
     def schedule_for_task(self,given_task):
         """

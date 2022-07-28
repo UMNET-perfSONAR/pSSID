@@ -1,0 +1,228 @@
+{
+    "bssid-scan-definitions": {
+        "continual-mwireless": {
+            "priority": 0,
+            "schedule": [
+                "every-15-minutes"
+            ],
+            "meta_information": "N/A",
+            "interface": "wlan0"
+        },
+        "mwireless-eecs-280": {
+            "priority": 0,
+            "schedule": [
+                "every-15-minutes-eecs-280"
+            ],
+            "meta_information": "N/A",
+            "interface": "wlan0"
+        },
+        "eduroam-bidaily": {
+            "priority": 0,
+            "schedule": [
+                "every-12-hours"
+            ],
+            "meta_information": "N/A",
+            "interface": "wlan0"
+        }
+    },
+    "archiver-definitions": {
+        "elk-stack": {
+            "data": {
+                "op": "put",
+                "_url": "http://198.111.224.150:5001",
+                "schema": "2"
+            },
+            "archiver": "http"
+        },
+        "syslog": {
+            "data": {
+                "ident": "pSSID22 result",
+                "facility": "local3"
+            },
+            "archiver": "syslog"
+        },
+        "esmond": {
+            "data": {},
+            "archiver": "esmond"
+        },
+        "rabbitmq": {
+            "data": {
+                "routing-key": "pscheduler_raw",
+                "_url": "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu"
+            },
+            "archiver": "rabbitmq"
+        }
+    },
+    "schedule-definitions": {
+        "every-15-minutes": {
+            "repeat": "*/15 * * * *"
+        },
+        "every-4-hours": {
+            "repeat": "0 */4 * * *"
+        },
+        "every-15-minutes-eecs-280": {
+            "repeat": "*/15 12-14 * 9-12,1-5 2,4"
+        },
+        "hourly-during-school": {
+            "repeat": "0 9-17 * sep-dec,jan-may 1-5"
+        },
+        "every-6-hours": {
+            "repeat": "0 */6 * * *"
+        },
+        "every-12-hours": {
+            "repeat": "0 0,12 * * *"
+        }
+    },
+    "ssid-profile-definitions": {
+        "eduroam": {
+            "min_signal": 3,
+            "SSID": "eduroam"
+        },
+        "MWireless": {
+
+            "min_signal": 21,
+            "SSID": "MWireless"
+        }
+    },
+    "test-definitions": {
+        "fsf.org-mtu": {
+            "type": "mtu",
+            "spec": {
+                "dest": "fsf.org"
+            }
+        },
+        "google.com-http": {
+            "type": "http",
+            "spec": {
+                "url": "www.google.com"
+            }
+        },
+        "8.8.8.8-rtt": {
+            "type": "rtt",
+            "spec": {
+                "dest": "8.8.8.8"
+            }
+        },
+        "example.org-trace": {
+            "type": "trace",
+            "spec": {
+                "dest": "example.org"
+            }
+        },
+        "umich.edu-latency": {
+            "type": "latency",
+            "spec": {
+                "dest": "www.umich.edu"
+            }
+        },
+        "layer-2-mwireless-auth": {
+            "type": "dot1x",
+            "spec": {
+                "interface": "wlan0",
+                "ssid": "MWireless"
+            }
+        },
+        "throughput": {
+            "type": "throughput",
+            "spec": {
+                "dest": "perfsonar-bin-arbl.umnet.umich.edu"
+            }
+        },
+        "layer-3-mwireless-auth": {
+            "type": "dhcp",
+            "spec": {
+                "interface": "wlan0"
+            }
+        },
+        "perfsonar.net-cname": {
+            "type": "dns",
+            "spec": {
+                "query": "www.perfsonar.net",
+                "record": "cname"
+            }
+        }
+    },
+    "job-definitions": {
+        "all-tests": {
+            "tests": [
+                "perfsonar.net-cname",
+                "google.com-http",
+                "umich.edu-latency",
+                "fsf.org-mtu",
+                "8.8.8.8-rtt",
+                "example.org-trace",
+                "layer-2-mwireless-auth",
+                "layer-3-mwireless-auth"
+            ],
+            "continue-if": "true",
+            "id": 0
+        },
+        "throughput-latency": {
+            "tests": [
+                "umich.edu-latency",
+                "throughput"
+            ],
+            "continue-if": "true",
+            "id": 3
+        },
+        "layer-3-auth": {
+            "tests": [
+                "layer-3-mwireless-auth"
+            ],
+            "continue-if": "true",
+            "id": 2
+        },
+        "layer-2-auth": {
+            "tests": [
+                "layer-2-mwireless-auth"
+            ],
+            "continue-if": "true",
+            "id": 1
+        }
+    },
+    "batch-definitions": {
+        "comprehensive-wifi": {
+            "jobs": [
+                "layer-2-auth",
+                "layer-3-auth",
+                "all-tests"
+            ],
+            "schedule": [
+                "every-12-hours"
+            ],
+            "profiles": [
+                "MWireless"
+            ],
+            "priority": 1,
+            "archivers": [
+                "elk-stack",
+                "syslog"
+            ],
+            "ttl": 180,
+            "BSSIDs": "continual-mwireless"
+        },
+        "throughput-latency-frequent": {
+            "jobs": [
+                "throughput-latency"
+            ],
+            "schedule": [
+                "every-15-minutes"
+            ],
+            "profiles": [
+                "MWireless",
+                "eduroam"
+            ],
+            "priority": 1,
+            "archivers": [
+                "elk-stack",
+                "syslog"
+            ],
+            "ttl": 180,
+            "BSSIDs": "continual-mwireless"
+        }
+    },
+    "meta": {},
+    "active-batches": [
+        "comprehensive-wifi"
+    ]
+}

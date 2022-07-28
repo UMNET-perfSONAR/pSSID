@@ -1,0 +1,19 @@
+{"task": {
+    "reference":{
+        "tests":[{            
+            "type": "rtt",
+            "spec": {
+            "dest": "1.1.1.1"
+            }
+        },{
+            "type": "dns",
+            "spec": {
+            "query": "umich.edu",
+            "record": "ns"
+        }
+        }
+    ]
+    },
+    "test":{}
+ }
+}

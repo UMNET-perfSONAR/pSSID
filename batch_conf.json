@@ -1,71 +1,55 @@
 {
     "schema": 2,
-
-
-    "global": {
-
-        "data": {
-        "count_multiplier": 1,
-            "sponsor": "This measurement is brought to you by perfSONAR.",
-            "dest": "ubuntu182"
-        },
-
-        "transform-pre": {
-            "script": [
-                "  .reference.before = \"This was inserted first.\"",
-                "| .reference.sponsor = $global.sponsor",
-                "| .reference.iteration = $iteration"
-            ]
-        },
-
-        "transform-post": {
-            "script": [
-                "  .reference.after = \"This was inserted last.\"",
-
-                "# Apply the destination",
-                "| if (.test.spec | has(\"dest\"))",
-                "    then .test.spec.dest = $global.dest",
-                "    else . end"
-            ]
+    "global":{        "transform-pre":{
+        "script":".+={\"archives\": [{ \"data\": { \"op\": \"put\", \"_url\": \"http:\/\/198.111.224.150:5001\",\"schema\": 2 },\"archiver\": \"http\" }]}"
         }
-
-
+       
     },
 
     "jobs": [
-
         {
-
-            "label": "noop",
-            "parallel": true,
-            "backoff": "PT1S",
-            "sync-start": true,
-            "task": [{
-                "test": {
-                    "type": "noop",
+            "label": "level2",
+            "parallel": false,
+            "task": {
+                "schema":4,
+                "debug": true,
+                "test":{                
+                    "type": "dot1x",
                     "spec": {
-                        "fail":0 
+                        "ssid": "MWireless",
+                        "interface":"wlan0",
+                        "_username":"",
+                        "_password":"",
+                        "key-management":"WPA-EAP"
                     }
-                }}
-            ],
+                },
+                "archives":[{
+                    "data": {
+                      "op": "put",
+                      "_url": "http://198.111.224.150:5001",
+                      "schema": 2
+                    },
+                    "archiver": "http"
+                  }]
+            },
             "continue-if": {
                     "script": ".[0].runs[0].\"application/json\".succeeded"
             }
         },
         {
+            "label": "level3",
+            "parallel": false,
+            "task": {
+                "schema":4,
 
-            "label": "noop",
-            "parallel": true,
-            "backoff": "PT1S",
-            "sync-start": true,
-            "task": [{
+                "debug": true,
                 "test": {
-                    "type": "noop",
+                    "type": "dhcp",
                     "spec": {
-                        "fail":0 
+                        "interface":"wlan0"
                     }
-                }}
-            ],
+                }
+            },
             "continue-if": {
                     "script": ".[0].runs[0].\"application/json\".succeeded"
             }
@@ -73,39 +57,35 @@
 
         {
             "label": "tasks",
+            "iterations": 2,
             "enabled": true,
             "parallel": true,
-            "task": [
-                        {       
-                            "test": {            
-                                "type": "rtt",
-                                "spec": {
-                                "dest": "ubuntu182"
-                                }
-                            }
-                        },
-                        {
-                            "test": {
-                                "type": "throughput",
-                                "spec": {
-                                        "dest": "ubuntu182",
-                                        "duration": "PT1M"
-                                }
-                            }
-                        },
-                        {
-                            "test": {
-                                "type": "trace",
-                                "spec": {
-                                "schema": 1,
-                                "dest": "ubuntu182"
-                                }
-                            }
+            "task": {
+                "debug": true,
+                "schema":4,
+
+                "reference":{
+                    "tests":[{            
+                        "type": "rtt",
+                        "spec": {
+                        "dest": "1.1.1.1"
                         }
-            ],
-         "continue-if": {
-                "script": ".[0].runs[0].\"application/json\".succeeded"
+                    },{
+                        "type": "dns",
+                        "spec": {
+                        "query": "umich.edu",
+                        "record": "ns"
+                    }
+                    }
+                ]
+                },
+                "test":{}
+             },
+             "task-transform": {
+                "script": [
+                    ".test = .reference.tests[$iteration]"
+                ]
+            }
         }
-    }
     ]
 }

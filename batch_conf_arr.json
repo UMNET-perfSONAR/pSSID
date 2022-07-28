@@ -1,0 +1,70 @@
+{
+    "global":{        
+    },
+
+    "schema": 2,
+    "jobs": [
+        {
+            "label": "level2",
+            "parallel": false,
+            "debug": true,
+            "task": [{
+                "test": {
+                    "type": "dot1x",
+                    "spec": {
+                        "interface":"wlan0",
+                        "_username":"",
+                        "_password":"",
+                        "key-management":"WPA-EAP"
+                    }
+                }}
+            ],
+            "continue-if": {
+                    "script": ".[0].runs[0].\"application/json\".succeeded"
+            }
+        },
+        {
+            "label": "level3",
+            "parallel": false,
+            "task": [{
+                "test": {
+                    "type": "dhcp",
+                    "spec": {
+                        "interface":"wlan0"
+                    }
+                }}
+            ],
+            "continue-if": {
+                    "script": ".[0].runs[0].\"application/json\".succeeded"
+            }
+        },
+
+        {
+            "label": "tasks",
+            "enabled": true,
+            "parallel": true,
+            "task": [
+                        {       
+                            "test": {            
+                                "type": "rtt",
+                                "spec": {
+                                "dest": "1.1.1.1"
+                                }
+                            }
+                        },
+                        {
+                            "test": {
+                                "type": "http",
+                                "spec": {
+                                "schema": 4,
+                                "url": "https://www.google.com"
+                                }
+                            }
+                        }
+            ],
+         "continue-if": {
+                "script": ".[0].runs[0].\"application/json\".succeeded"
+        }
+    }
+    ]
+}
