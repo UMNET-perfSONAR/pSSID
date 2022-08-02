@@ -3,7 +3,7 @@
         "continual-mwireless": {
             "priority": 0,
             "schedule": [
-                "every-15-minutes"
+                "every-minute"
             ],
             "meta_information": "N/A",
             "interface": "wlan0"
@@ -57,6 +57,12 @@
         "every-15-minutes": {
             "repeat": "*/15 * * * *"
         },
+        "every-2-minute": {
+            "repeat": "*/2 * * * *"
+        },
+        "every-minute": {
+            "repeat": "* * * * *"
+        },
         "every-4-hours": {
             "repeat": "0 */4 * * *"
         },
@@ -75,11 +81,11 @@
     },
     "ssid-profile-definitions": {
         "eduroam": {
-            "min_signal": 3,
+            "min_signal": 80,
             "SSID": "eduroam"
         },
         "MWireless": {
-            "min_signal": 21,
+            "min_signal": 71,
             "SSID": "MWireless"
         }
     },
@@ -118,7 +124,20 @@
             "type": "dot1x",
             "spec": {
                 "interface": "wlan0",
-                "ssid": "MWireless"
+                "ssid": "MWireless",
+                "_username":"",
+                "_password":"",
+                "key-management":"WPA-EAP"    
+            }
+        },
+        "layer-2-eduroam-auth":{
+            "type": "dot1x",
+            "spec": {
+                "interface": "wlan0",
+                "ssid": "eduroam",
+                "_username":"",
+                "_password":"",
+                "key-management":"WPA-EAP"    
             }
         },
         "throughput": {
@@ -150,9 +169,7 @@
                 "umich.edu-latency",
                 "fsf.org-mtu",
                 "8.8.8.8-rtt",
-                "example.org-trace",
-                "layer-2-mwireless-auth",
-                "layer-3-mwireless-auth"
+                "example.org-trace"
             ],
             "continue-if": "true",
             "id": 0
@@ -191,10 +208,11 @@
                 "all-tests"
             ],
             "schedule": [
-                "every-12-hours"
+                "every-2-minute"
             ],
             "profiles": [
-                "MWireless"
+                "MWireless",
+                "eduroam"
             ],
             "priority": 1,
             "archivers": [
@@ -206,6 +224,8 @@
         },
         "throughput-latency-frequent": {
             "jobs": [
+                "layer-2-auth",
+                "layer-3-auth",
                 "throughput-latency"
             ],
             "schedule": [

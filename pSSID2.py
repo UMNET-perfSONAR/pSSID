@@ -20,6 +20,8 @@ parsed_file = Parse(config_file)
 config_file.close()
 
 schedule = Schedule(parsed_file)
+print(schedule)
+
 schedule.initial_schedule()
 
 print(schedule.s.queue)

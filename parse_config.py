@@ -1,7 +1,8 @@
 
 import psjson
 import traceback
-from crontab import CronTab
+from croniter import croniter
+from datetime import datetime
 import sys
 import argparse
 
@@ -25,6 +26,7 @@ class Parse:
         json_obj =  psjson.json_load(source=config_file)
 
         try:
+            self.base = datetime.now()
             self.meta = json_obj["meta"]
             self.archives = json_obj["archiver-definitions"]
             self.tests = json_obj["test-definitions"]
@@ -73,11 +75,12 @@ class Parse:
             job_obj = {}
             job_obj["label"] = given_job
             job_obj["parallel"] = job_def["parallel"]
-            job_obj["task"] = {"reference":{"tests":[]}, "schema":4, "test":{}}
+            job_obj["iterations"] = len(job_def["tests"])
+            job_obj["task"] = {"reference":{"tests":[]}, "test":{}}
             job_obj["task-transform"] = {"script":[".test = .reference.tests[$iteration]"]}
             #TODO:support archives
-            job_obj["task"]["archives"] = {}
-            for eachtest in job_def["jobs"]:
+            job_obj["task"]["archives"] = []
+            for eachtest in job_def["tests"]:
                 job_obj["task"]["reference"]["tests"].append(self.get_test(eachtest))
         except:
             print("ERROR in creating batch job")
@@ -103,22 +106,25 @@ class Parse:
     
     def assemble_scan(self, given_scan, bssid_scan_name):
         scan_batch = {}
-        scan_batch["schema"] = 2
         scan_batch["jobs"] = []
         scan_batch["jobs"].append({"label":"bssid_scan","task":{"test":{"type":"wifibssid", "spec":{"interface":given_scan["interface"]}}}})
         cron_list = []
         schedlist = given_scan["schedule"]
         for sched in schedlist:
-            cron_list.append(CronTab(str(self.schedules[sched]["repeat"])))
+            cron_list.append(croniter(str(self.schedules[sched]["repeat"]), self.base))
         return {"name":bssid_scan_name,"priority":given_scan["priority"],"schedule":cron_list, "batch":scan_batch}
 
     def create_scheduled_scans(self):
-        all_scans = set()
+        bssid_set = set()
+        all_scans = []
         for eachbatch in self.active_batches:
             for bssid in self.get_batch(eachbatch)["BSSIDs"]:
-                all_scans.add(self.assemble_scan(self.BSSID_scans[bssid], bssid))
+                if bssid in bssid_set:
+                    continue
+                bssid_set.add(bssid)
+                all_scans.append(self.assemble_scan(self.BSSID_scans[bssid], bssid))
         
-        return list(all_scans)
+        return all_scans
     
     def schedule_for_batch(self,given_batch):
         """
@@ -129,7 +135,7 @@ class Parse:
             schedlist = self.batches[given_batch]["schedule"]
             for i in schedlist:
                 cronline = self.schedules[i]
-                cron_list.append(CronTab(str(cronline["repeat"])))
+                cron_list.append(croniter(str(cronline["repeat"]), self.base))
         except:
             print("ERROR in retrieving \"schedule\" from", given_batch)
             print(traceback.print_exc())
@@ -153,10 +159,10 @@ class Parse:
                 min_signal = self.SSID_profiles[eachprofile]["min_signal"]
                 ssid = self.SSID_profiles[eachprofile]["SSID"]
                 single_batch["profiles"][ssid] = min(min_signal, single_batch["profiles"].get(ssid, min_signal))
-
+            all_scheduled_batches.append(single_batch)
+        print(all_scheduled_batches)
         return all_scheduled_batches
     
-
 
 def tests(p):
     #single dict test:
@@ -166,13 +172,9 @@ def tests(p):
     print("archives:", p.archives)
     print("tests:", p.tests)
     print("schedules:", p.schedules)
-    print("tasks:", p.tasks)
-    print("BSSID_channels", p.BSSID_channels) 
-    print("SSID_profiles", p.SSID_profiles)
-    print("SSID_groups", p.SSID_groups) 
-    print("newwork_interfaces", p.network_interfaces)
-    print("BSSID_scans", p.BSSID_scans)
-    print("all_scans", p.all_scans)
+    print("scheduled scans", p.scheduled_scans)
+    print("active batches:", p.active_batches)
+    print("scheduled batches", p.scheduled_batches)
     print("SINGLE END")
 
 
