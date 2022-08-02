@@ -6,64 +6,6 @@ import sys
 import argparse
 
 
-def scan_bssids(self):
-    """
-    Parses the scan objects defined in config file
-    """
-
-    all_scans = {}
-
-    for i in self.BSSID_scans:
-        scan_obj = {}
-        try:
-            scan_profile = self.BSSID_scans[i]
-            scan_obj["name"] = i
-            scan_obj["interface"] = self.network_interfaces[scan_profile["interface"]]
-            scan_obj["profiles"] = self.SSIDs_for_profiles(scan_profile["profiles"])
-            scan_obj["unknown_SSID_warning"] = scan_profile["unknown_SSID_warning"]
-            scan_obj["priority"] = scan_profile["priority"]            
-            scan_obj["meta"] = self.meta[scan_profile["meta-info"]]
-            scan_obj["BATCH"] = {
-                    "schema": 2,
-                    "jobs": [
-                        {
-                            "label": i,
-                            "task": [{
-                                "test": {
-                                    "type": "wifibssid",
-                                    "spec": {
-                                        "interface": scan_obj["interface"],
-                                        "ssid":""
-                                    }
-                                }}
-                            ],
-                        } 
-                    ]
-            }
-
-        except:
-            print("ERROR in retrieving \"BSSID_scans\"")
-            print(traceback.print_exc())
-
-        try:
-            cron_list = []
-            schedlist = scan_profile["schedule"]
-            for j in schedlist:
-                scansched = self.schedules[j]
-                cron_list.append(CronTab(str(scansched["repeat"])))
-
-            scan_obj["schedule"] = cron_list
-        except:
-            print("ERROR in retrieving \"schedule\" from BSSID_scans")
-            print(traceback.print_exc())
-
-        
-        all_scans[i] = scan_obj
-
-    return all_scans
-
-
-
 
 class Parse:
     """
@@ -92,10 +34,21 @@ class Parse:
             self.jobs = json_obj["job-definitions"]
             self.batches = json_obj["batch-definitions"]
             self.active_batches = json_obj["active-batches"]
+            #schedule_scan object: {name, priority, schedule, batch}
+            self.scheduled_scans = self.create_scheduled_scans()
+            #schedule_batch object: {name, priority, schedule, batch, profiles}
+            self.scheduled_batches = self.create_scheduled_batches()
         except:
             print("ERROR: Make sure all fields are present")
             print(traceback.print_exc())
 
+
+    def get_scheduled_scans(self):
+        return self.scheduled_scans
+    def get_scheduled_batches(self):
+        return self.scheduled_batches
+    def get_batch(self, given_batch):
+        return self.batches[given_batch]
     def get_scan(self, given_scan):
         return self.BSSID_scans[given_scan]
     
@@ -116,18 +69,23 @@ class Parse:
         Creates a job for the batch conf file
         """
         try:
+            job_def = self.get_job(given_job)
             job_obj = {}
             job_obj["label"] = given_job
-            job_obj["task"] = {"reference":}
-            for eachtest in self.jobs[given_job]["test"]:
-                job_obj["task"].append(self.create_pSSID_task(given_job, eachtest))
+            job_obj["parallel"] = job_def["parallel"]
+            job_obj["task"] = {"reference":{"tests":[]}, "schema":4, "test":{}}
+            job_obj["task-transform"] = {"script":[".test = .reference.tests[$iteration]"]}
+            #TODO:support archives
+            job_obj["task"]["archives"] = {}
+            for eachtest in job_def["jobs"]:
+                job_obj["task"]["reference"]["tests"].append(self.get_test(eachtest))
         except:
             print("ERROR in creating batch job")
             print(traceback.print_exc())
 
         return job_obj
 
-    def create_batch_conf(self, given_batch):
+    def assemble_batch(self, given_batch):
         """
         Creates a batch configuration file for pScheduler
         """
@@ -135,223 +93,68 @@ class Parse:
             batch_conf = {}
             batch_conf["schema"] = 2
             batch_conf["jobs"] = []
-            for eachtest in self.batches[given_batch]["test"]:
-                batch_conf["jobs"].append(self.create_pSSID_task(given_batch, eachtest))
+            for eachtest in self.batches[given_batch]["jobs"]:
+                batch_conf["jobs"].append(self.create_batch_job(eachtest))
         except:
             print("ERROR in creating batch configuration file")
             print(traceback.print_exc())
 
         return batch_conf
+    
+    def assemble_scan(self, given_scan, bssid_scan_name):
+        scan_batch = {}
+        scan_batch["schema"] = 2
+        scan_batch["jobs"] = []
+        scan_batch["jobs"].append({"label":"bssid_scan","task":{"test":{"type":"wifibssid", "spec":{"interface":given_scan["interface"]}}}})
+        cron_list = []
+        schedlist = given_scan["schedule"]
+        for sched in schedlist:
+            cron_list.append(CronTab(str(self.schedules[sched]["repeat"])))
+        return {"name":bssid_scan_name,"priority":given_scan["priority"],"schedule":cron_list, "batch":scan_batch}
 
+    def create_scheduled_scans(self):
+        all_scans = set()
+        for eachbatch in self.active_batches:
+            for bssid in self.get_batch(eachbatch)["BSSIDs"]:
+                all_scans.add(self.assemble_scan(self.BSSID_scans[bssid], bssid))
+        
+        return list(all_scans)
     
-    
-    def schedule_for_task(self,given_task):
+    def schedule_for_batch(self,given_batch):
         """
-        Returns list of cron object for a given task
+        Returns list of cron object for a given batch
         """
         try:
             cron_list = []
-            schedlist = self.batches[given_task]["schedule"]
+            schedlist = self.batches[given_batch]["schedule"]
             for i in schedlist:
                 cronline = self.schedules[i]
                 cron_list.append(CronTab(str(cronline["repeat"])))
         except:
-            print("ERROR in retrieving \"schedule\" from", given_task)
+            print("ERROR in retrieving \"schedule\" from", given_batch)
             print(traceback.print_exc())
 
         return cron_list
 
-
-
-
-    def SSIDs_for_profiles(self,profiles):        
-        try:
-            ssids = [] 
-
-            if type(profiles) is list:
-                ssidlist = profiles 
-            else:
-                ssidlist = self.SSID_groups[profiles]
-            
-            for i in ssidlist:
-                ssid = self.SSID_profiles[i]
-                if type(ssid["channels"]) is not list:
-                    ssid["channels"] = self.BSSID_channels[ssid["channels"] ]
-                ssids.append(ssid)
-        except:
-            print("ERROR in retrieving \"SSIDs\" from", profiles)
-            print(traceback.print_exc())
-
-        return ssids
-
-    
-
-    
-   
-
-    def create_pScheduler_task(self, given_task, given_test):
+    def create_scheduled_batches(self):
         """
-        returns a pscheduler formatted for specific task
-        running this function validates archives,tests
+        returns a list of scheduled batches
         """
-        #scheudle needs to be empty when sent to pScheduler
-        taskobj = {
-            "schema" : 1,
-            "schedule": {}
-        }
+        all_scheduled_batches = []
+        for given_batch in self.active_batches:
+            single_batch = {}
+            single_batch["name"] = given_batch
+            single_batch["batch"] = self.assemble_batch(given_batch)
+            single_batch["schedule"] = self.schedule_for_batch(given_batch)
+            single_batch["priority"] = self.batches[given_batch]["priority"]
+            #mapping ssid to min_signal
+            single_batch["profiles"] = {}
+            for eachprofile in self.batches[given_batch]["profiles"]:
+                min_signal = self.SSID_profiles[eachprofile]["min_signal"]
+                ssid = self.SSID_profiles[eachprofile]["SSID"]
+                single_batch["profiles"][ssid] = min(min_signal, single_batch["profiles"].get(ssid, min_signal))
 
-        # validate tests
-        try:
-            taskobj["test"]= self.tests[given_test]
-        except:
-            print("ERROR in retrieving \"test\" from", given_task, given_test)
-            print(traceback.print_exc()) 
-
-        # validate archives
-        try:
-            taskobj["archives"] = []
-            archives_list = self.tasks[given_task]["archives"]
-            for i in archives_list:
-                taskobj["archives"].append(self.archives[i])
-        except:
-            print("ERROR in retrieving \"archives\" from", given_task)
-            print(traceback.print_exc())
-
-        return taskobj
-
-
-    
-    def create_pSSID_task(self, given_task, given_test):
-        """
-        running this function validates SSIDs and schedule
-        TASK: contains valid pScheduler tasks
-        Sched: list of cron schedule info
-        SSIDs: list of SSIDs associated with task
-        """
-        taskobj = {}
-        taskobj["throughput"] = False
-        taskobj["name"] = given_test
-        taskobj["amqp_url"] = self.amqp_url
-        taskobj["TASK"] = self.create_pScheduler_task(given_task, given_test)
-        taskobj["schedule"] = self.schedule_for_task(given_task)
-
-        # includes SSID profiles object infomartion
-        taskobj["SSIDs"] = self.SSIDs_for_profiles(self.tasks[given_task]["profiles"])
-        taskobj["interface"] = self.all_scans[self.tasks[given_task]["BSSIDs"]]
-        taskobj["priority"] = self.tasks[given_task]["priority"]
-        taskobj["BSSIDs"] = self.tasks[given_task]["BSSIDs"]
-        taskobj["ttl"] = self.tasks[given_task]["ttl"]
-        taskobj["meta"] = self.meta[self.tasks[given_task]["meta_information"]]
-
-        if "throughput_threshold" in self.tasks[given_task]:
-            taskobj["throughput"] = True
-            taskobj["throughput_threshold"] = self.tasks[given_task]["throughput_threshold"]
-
-        return taskobj
-    
-    
-    def create_pScheduler_batch(self, eachbatch):
-
-        batch_temp = {
-                        "schema": 2,
-                        "jobs": [
-                                    {
-                                        "label": "noop",
-                                        "parallel": True,
-                                        "backoff": "PT1S",
-                                        "sync-start": True,
-                                        "task": [{
-                                            "test": {
-                                                "type": "noop",
-                                                "spec": {
-                                                    "fail":0 
-                                                }
-                                            }}
-                                        ],
-                                        "continue-if": {
-                                                "script": ".[0].runs[0].\"application/json\".succeeded"
-                                        }
-                                    },
-                                    {
-
-                                        "label": "noop",
-                                        "parallel": True,
-                                        "backoff": "PT1S",
-                                        "sync-start": True,
-                                        "task": [{
-                                            "test": {
-                                                "type": "noop",
-                                                "spec": {
-                                                    "fail":0 
-                                                }
-                                            }}
-                                        ],
-                                        "continue-if": {
-                                                "script": ".[0].runs[0].\"application/json\".succeeded"
-                                        }
-                                    }
-                        ]
-                }
-
-        job_instance = {
-                "label": eachbatch,
-                "parallel": True,
-                "task": []
-            }
-        
-        for job in self.batches[eachbatch]["jobs"]: 
-            test_instance = {
-                "test": self.tests[job]
-            }
-            job_instance["task"].append(test_instance) 
-            
-        batch_temp["jobs"].append(job_instance)
-             
-        return batch_temp
-       
-    def create_pSSID_batch(self, given_task):
-        """
-        running this function validates SSIDs and schedule
-        TASK: contains valid pScheduler tasks
-        Sched: list of cron schedule info
-        SSIDs: list of SSIDs associated with task
-        """
-        taskobj = {}
-        taskobj["name"] = given_task
-        taskobj["BATCH"] = self.create_pScheduler_batch(given_task)
-        taskobj["schedule"] = self.schedule_for_task(given_task)
-
-        # includes SSID profiles object infomartion
-        taskobj["priority"] = self.batches[given_task]["priority"]
-        taskobj["BSSIDs"] = self.batches[given_task]["BSSIDs"]
-        taskobj["ttl"] = self.batches[given_task]["ttl"]
-        # taskobj["meta"] = self.meta[self.batches[given_task]["meta_information"]]
-
-        return taskobj
-    
-
-   
-    def pSSID_task_list(self):
-        """
-        option to return list of pSSID task objects. Dict keys: TASK, Sched, SSIDS
-        """
-        TASKS = []
-        for eachbatch in self.active_batches:
-            for eachtest in self.batches[eachbatch]["test"]:
-                TASKS.append(self.create_pSSID_task(eachbatch, eachtest))
-
-        return TASKS
-    
-    def pSSID_batch_list(self):
-        """
-        option to return list of batch objects. Dict keys: TASK, Sched, SSIDS
-        """
-        BATCHES = []
-        for eachbatch in self.active_batches:
-            BATCHES.append(self.create_pSSID_batch(eachbatch))
-        return BATCHES
-
-
+        return all_scheduled_batches
     
 
 

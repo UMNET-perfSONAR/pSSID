@@ -79,7 +79,6 @@
             "SSID": "eduroam"
         },
         "MWireless": {
-
             "min_signal": 21,
             "SSID": "MWireless"
         }
@@ -144,6 +143,7 @@
     },
     "job-definitions": {
         "all-tests": {
+            "parallel": true,
             "tests": [
                 "perfsonar.net-cname",
                 "google.com-http",
@@ -158,6 +158,7 @@
             "id": 0
         },
         "throughput-latency": {
+            "parallel": false,
             "tests": [
                 "umich.edu-latency",
                 "throughput"
@@ -166,6 +167,7 @@
             "id": 3
         },
         "layer-3-auth": {
+            "parallel": true,
             "tests": [
                 "layer-3-mwireless-auth"
             ],
@@ -173,6 +175,7 @@
             "id": 2
         },
         "layer-2-auth": {
+            "parallel": true,
             "tests": [
                 "layer-2-mwireless-auth"
             ],
@@ -199,7 +202,7 @@
                 "syslog"
             ],
             "ttl": 180,
-            "BSSIDs": "continual-mwireless"
+            "BSSIDs": ["continual-mwireless"]
         },
         "throughput-latency-frequent": {
             "jobs": [
@@ -218,7 +221,7 @@
                 "syslog"
             ],
             "ttl": 180,
-            "BSSIDs": "continual-mwireless"
+            "BSSIDs": ["continual-mwireless"]
         }
     },
     "meta": {},
