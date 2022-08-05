@@ -2,7 +2,7 @@ from schedule2 import Schedule
 from parse_config import Parse, tests
 import argparse
 import subprocess as sp
-
+import daemon
 
 parser = argparse.ArgumentParser(description='pSSID')
 parser.add_argument('file', action='store',
@@ -17,13 +17,10 @@ args = parser.parse_args()
 
 config_file = open(args.file, "r")
 parsed_file = Parse(config_file)
-config_file.close()
+config_file.close() 
 
 schedule = Schedule(parsed_file)
-print(schedule)
-
-schedule.initial_schedule()
-
-print(schedule.s.queue)
-schedule.s.run()
-
+print("daemonizing")
+with daemon.DaemonContext():
+  schedule.initial_schedule()
+  schedule.s.run()

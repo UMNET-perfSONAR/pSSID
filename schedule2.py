@@ -3,12 +3,14 @@ from croniter import croniter
 from datetime import date, datetime
 import sched, time, math, json
 import pscheduler.batchprocessor
-import bssid_scan
 
 
 class Schedule:
 
 	def __init__(self, parsed_file):
+		"""
+		Initializes a pSSID schedule
+		"""
 		self.active_ssid_list = []
 		self.p = parsed_file
 		self.s = sched.scheduler(time.time, time.sleep)
@@ -24,7 +26,7 @@ class Schedule:
 		Updates active_ssid_list
 		"""
 		start_time = time.time()
-		print("sending batch to pscheduler, awaiting result")
+		print("sending scanning request to pscheduler, awaiting result")
 		processor = pscheduler.batchprocessor.BatchProcessor(batch)
 		result = processor()
 		print("result received")
@@ -35,6 +37,7 @@ class Schedule:
 			result = processor()
 			if not result["jobs"][0]["results"][0]["runs"][0]["application/json"]["succeeded"]:
 				print("Scan failed again, skipping")
+				print(result["jobs"][0]["results"][0]["runs"][0]["application/json"])
 				return
 		cells = result["jobs"][0]["results"][0]["runs"][0]["application/json"]["ssid_list"]
 		end_time = time.time()
@@ -50,12 +53,21 @@ class Schedule:
 		for ssid_meta in self.active_ssid_list:
 			#qualify based on signal and ssid match
 			if profiles.get(ssid_meta["ssid"], 101) <= ssid_meta["signal"]:
-				print("signal"+str(ssid_meta["signal"])+"greater than"+str(profiles.get(ssid_meta["ssid"]))+"running measurements against " + ssid_meta["address"])
+				print(ssid_meta["ssid"]+ " signal "+str(ssid_meta["signal"])+" greater than "+str(profiles.get(ssid_meta["ssid"]))+" running measurements against " + ssid_meta["address"])
 				#TODO: assumption: layer 2 test is always the first test
 				scheduled_batch["batch"]["jobs"][0]["task"]["reference"]["tests"][0]["spec"]["bssid"] = ssid_meta["address"]
-				print(scheduled_batch["batch"])
 				processor = pscheduler.batchprocessor.BatchProcessor(scheduled_batch["batch"])
-				result = processor()
+				try:
+					result = processor()
+				except ValueError:
+					print("Batch failed, retrying")
+					processor = pscheduler.batchprocessor.BatchProcessor(scheduled_batch["batch"])
+					try:
+						result = processor()
+					except ValueError:
+						print("Batch failed again, skipping")
+						print(scheduled_batch["batch"])
+						return
 				print(json.dumps(result, indent=2))
 				
 		return None
@@ -105,11 +117,3 @@ class Schedule:
 	def print_queue(self):
 		for i in self.s.queue:
 			self.print_event(event=i)
-
-
-
-if __name__ == "__main__":
-	scan_batch = {}
-	scan_batch["schema"] = 2
-	scan_batch["jobs"] = []
-	scan_batch["jobs"].append({"label":"bssid_scan","task":{"test":{"type":"wifibssid", "spec":{"interface":"wlan0"}}}})

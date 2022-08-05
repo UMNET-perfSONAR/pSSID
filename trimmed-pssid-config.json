@@ -3,7 +3,7 @@
         "continual-mwireless": {
             "priority": 0,
             "schedule": [
-                "every-minute"
+                "every-15-minutes-eecs-280"
             ],
             "meta_information": "N/A",
             "interface": "wlan0"
@@ -30,7 +30,7 @@
             "data": {
                 "op": "put",
                 "_url": "http://198.111.224.150:5001",
-                "schema": "2"
+                "schema": 2
             },
             "archiver": "http"
         },
@@ -171,7 +171,7 @@
                 "8.8.8.8-rtt",
                 "example.org-trace"
             ],
-            "continue-if": "true",
+            "continue-if": false,
             "id": 0
         },
         "throughput-latency": {
@@ -180,7 +180,7 @@
                 "umich.edu-latency",
                 "throughput"
             ],
-            "continue-if": "true",
+            "continue-if": false,
             "id": 3
         },
         "layer-3-auth": {
@@ -188,7 +188,7 @@
             "tests": [
                 "layer-3-mwireless-auth"
             ],
-            "continue-if": "true",
+            "continue-if": true,
             "id": 2
         },
         "layer-2-auth": {
@@ -196,7 +196,7 @@
             "tests": [
                 "layer-2-mwireless-auth"
             ],
-            "continue-if": "true",
+            "continue-if": true,
             "id": 1
         }
     },
@@ -211,13 +211,11 @@
                 "every-2-minute"
             ],
             "profiles": [
-                "MWireless",
-                "eduroam"
+                "MWireless"
             ],
             "priority": 1,
             "archivers": [
-                "elk-stack",
-                "syslog"
+                "elk-stack"
             ],
             "ttl": 180,
             "BSSIDs": ["continual-mwireless"]
@@ -232,13 +230,11 @@
                 "every-15-minutes"
             ],
             "profiles": [
-                "MWireless",
-                "eduroam"
+                "MWireless"
             ],
             "priority": 1,
             "archivers": [
-                "elk-stack",
-                "syslog"
+                "elk-stack"
             ],
             "ttl": 180,
             "BSSIDs": ["continual-mwireless"]

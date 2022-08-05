@@ -1,9 +1,11 @@
 
+from os import access
 import psjson
 import traceback
 from croniter import croniter
 from datetime import datetime
 import sys
+import json
 import argparse
 
 
@@ -66,6 +68,16 @@ class Parse:
     def get_job(self, given_job):
         return self.jobs[given_job]
     
+    def aggregate_archivers(self) -> str:
+        #list comprehension to get all archivers and return a string of script
+        result = r""".+={"archives":["""
+        result += ','.join([json.dumps(self.get_archiver(archiver)) for batch in self.active_batches for archiver in self.get_batch(batch)["archivers"]])
+        result += """]}"""
+        return json.dumps(result)[1:-1]
+
+    def create_archivers_list(self):
+        return [self.get_archiver(archiver) for batch in self.active_batches for archiver in self.get_batch(batch)["archivers"]]
+
     def create_batch_job(self, given_job):
         """
         Creates a job for the batch conf file
@@ -75,11 +87,12 @@ class Parse:
             job_obj = {}
             job_obj["label"] = given_job
             job_obj["parallel"] = job_def["parallel"]
+            if job_def.get("continue-if", False):
+                job_obj["continue-if"] = {"script": ".[0].runs[0].\"application/json\".succeeded"}
             job_obj["iterations"] = len(job_def["tests"])
-            job_obj["task"] = {"reference":{"tests":[]}, "test":{}}
+            job_obj["task"] = {"reference":{"tests":[]}, "test":{}, "debug":True, "schema":4}
             job_obj["task-transform"] = {"script":[".test = .reference.tests[$iteration]"]}
-            #TODO:support archives
-            job_obj["task"]["archives"] = []
+            job_obj["task"]["archives"] = self.create_archivers_list()
             for eachtest in job_def["tests"]:
                 job_obj["task"]["reference"]["tests"].append(self.get_test(eachtest))
         except:
@@ -95,13 +108,13 @@ class Parse:
         try:
             batch_conf = {}
             batch_conf["schema"] = 2
+            # batch_conf["global"] = {"transform-pre":{"script":self.aggregate_archivers()}}
             batch_conf["jobs"] = []
             for eachtest in self.batches[given_batch]["jobs"]:
                 batch_conf["jobs"].append(self.create_batch_job(eachtest))
         except:
             print("ERROR in creating batch configuration file")
             print(traceback.print_exc())
-
         return batch_conf
     
     def assemble_scan(self, given_scan, bssid_scan_name):
@@ -160,7 +173,6 @@ class Parse:
                 ssid = self.SSID_profiles[eachprofile]["SSID"]
                 single_batch["profiles"][ssid] = min(min_signal, single_batch["profiles"].get(ssid, min_signal))
             all_scheduled_batches.append(single_batch)
-        print(all_scheduled_batches)
         return all_scheduled_batches
     
 
