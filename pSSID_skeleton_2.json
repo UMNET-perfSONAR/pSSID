@@ -146,6 +146,7 @@
   "batches": {
       "comprehensive-wifi": {
 	  "priority": 1,
+	  "bssid_scan_interface": "JQ .interface_wifi",
 	  "ttl": 180,
 	  "SSID-profiles": [
 	      "MWireless"
@@ -165,6 +166,7 @@
 
       "throughput-latency-frequent": {
 	  "priority": 1,
+      	  "bssid_scan_interface": "JQ .interface_wifi",
 	  "ttl": 180,
 	  "SSID-profiles": [
 	      "MWireless"
