@@ -1,0 +1,298 @@
+{
+  "hosts": {
+    "rpi1": {
+      "batches": [],
+      "data": {}
+    },
+
+    "rpi2": {
+      "batches": [],
+      "data": {}
+    },
+
+    "rpi3": {
+      "batches": [],
+      "data": {}
+    }
+
+  },
+
+
+  "host_groups": {
+    "hardware_rpi4": {
+      "hosts": [ "rpi1", "rpi2", "rpi3" ],
+      "batches": [],
+      "data": {
+	"interface_wifi": "wlan0"
+      }
+    },
+
+    "eduroam": {
+      "hosts": [],
+      "batches": [],
+      "data": {}
+    },
+
+    "chem_building": {
+      "hosts": [ "rpi1", "rpi2" ],
+      "batches": [],
+      "data": {}
+    }
+  },
+
+
+  "tests": {
+
+      "layer-2-auth-mwireless": {
+	  "type": "dot1x",
+	  "spec": {
+	      "interface": "JQ .interface_wifi",
+	      "ssid": "MWireless",
+	      "_username":"",
+	      "_password":"",
+	      "key-management":"WPA-EAP"    
+	  }
+      },
+
+      "layer-2-auth-eduroam":{
+	  "type": "dot1x",
+	  "spec": {
+	      "interface": "JQ .interface_wifi",
+	      "ssid": "eduroam",
+	      "_username":"",
+	      "_password":"",
+	      "key-management":"WPA-EAP"    
+	  }
+      },
+
+      "layer-3-mwireless-auth": {
+	  "type": "dhcp",
+	  "spec": {
+	      "interface": "JQ .interface_wifi"
+	  }
+      },
+
+      "http-google": {
+	  "type": "http",
+	  "spec": {
+	      "url": "www.google.com"
+	  }
+      },
+
+      "latency-umich.edu": {
+	  "type": "latency",
+	  "spec": {
+	      "dest": "www.umich.edu"
+	  }
+      },
+
+      "throughput": {
+	  "type": "throughput",
+	  "spec": {
+	      "dest": "perfsonar-bin-arbl.umnet.umich.edu"
+	  }
+      },
+
+      "perfsonar.net-cname": {
+	  "type": "dns",
+	  "spec": {
+	      "query": "www.perfsonar.net",
+	      "record": "cname"
+	  }
+      }
+  },
+
+  "jobs": {
+      "all-tests": {
+	  "parallel": true,
+	  "tests": [
+	      "perfsonar.net-cname",
+	      "google.com-http",
+	      "umich.edu-latency",
+	      "fsf.org-mtu",
+	      "8.8.8.8-rtt",
+	      "example.org-trace"
+	  ],
+	  "continue-if": false,
+      },
+
+      "throughput-latency": {
+	  "parallel": false,
+	  "tests": [
+	      "umich.edu-latency",
+	      "throughput"
+	  ],
+	  "continue-if": false,
+      },
+
+      "layer-2-auth": {
+	  "parallel": true,
+	  "tests": [
+	      "layer-2-mwireless-auth"
+	  ],
+	  "continue-if": true,
+      },
+
+      "layer-3-auth": {
+	  "parallel": true,
+	  "tests": [
+	      "layer-3-mwireless-auth"
+	  ],
+	  "continue-if": true,
+      }
+
+  },
+
+  "batches": {
+      "comprehensive-wifi": {
+	  "priority": 1,
+	  "ttl": 180,
+	  "SSID-profiles": [
+	      "MWireless"
+	  ],
+	  "schedule": [
+	      "every-2-minute"
+	  ],
+	  "jobs": [
+	      "layer-2-auth",
+	      "layer-3-auth",
+	      "all-tests"
+	  ],
+	  "archivers": [
+	      "elk-stack"
+	  ]
+      },
+
+      "throughput-latency-frequent": {
+	  "priority": 1,
+	  "ttl": 180,
+	  "SSID-profiles": [
+	      "MWireless"
+	  ],
+	  "schedule": [
+	      "every-15-minutes"
+	  ],
+	  "jobs": [
+	      "layer-2-auth",
+	      "layer-3-auth",
+	      "throughput-latency"
+	  ],
+	  "archivers": [
+	      "elk-stack"
+	  ]
+      }
+  },
+
+  "archivers": {
+      "example_rabbitmq_archive": {
+	  "archiver": "rabbitmq",
+	  "data": {
+	      "_url": "amqp://elastic:elastic@pssid-elk.miserver.it.umich.edu",
+	      "routing-key": "pscheduler_raw"                
+	  }
+      },
+      "example_syslog_archive": {
+	  "archiver": "syslog",
+	  "data": {
+	      "ident": "pSSID22 result",
+	      "facility" : "local3"
+	  }
+      }
+  },
+
+  "tests": {
+      "example_test_rtt": {
+	  "type": "rtt",
+	  "spec": {
+	      "dest": "www.umich.edu"
+	  }
+      },
+      "example_test_latency": {
+	  "type": "latency",
+	  "spec": {
+	      "dest": "perfsonar-bin-arbl.umnet.umich.edu"
+	  }
+      },
+      "example_test_throughput_ul": {
+	  "type": "throughput",
+	  "spec": {
+	      "dest": "perfsonar-bin-arbl.umnet.umich.edu"
+	  }
+	  },
+      "example_test_throughput_dl": {
+	  "type": "throughput",
+	  "spec": {
+	      "source": "perfsonar-bin-arbl.umnet.umich.edu"
+	  }
+      },
+      "example_test_http_umich":{
+	  "type": "http",
+	  "spec": {
+	      "url": "http://umich.edu"
+	  }
+      },
+      "example_test_http_google":{
+	  "type": "http",
+	  "spec": {
+	      "url": "http://google.com"
+	  }
+      },
+      "example_test_dns_a":{
+	  "type": "dns",
+	  "spec": {
+	      "query": "www.umich.edu",
+	      "record": "a"
+	  }
+      },
+      "example_test_dns_aaaa":{
+	  "type": "dns",
+	  "spec": {
+	      "query": "www.umich.edu",
+	      "record": "aaaa"
+	  }
+      }
+  },
+
+  "schedules": {
+      "schedule_every_1_min": {
+	  "repeat": "*/1 * * * *"
+      },
+      "schedule_every_5_min": {
+	  "repeat": "*/5 * * * *"
+      },
+      "schedule_every_10_min": {
+	  "repeat": "*/10 * * * *"
+      },
+      "schedule_every_1_hour": {
+	  "repeat": "0 * * * *"
+      }, 
+      "schedule_every_2_hours": {
+	  "repeat": "0 */2 * * *"
+      },
+      "schedule_every_4_hours": {
+	  "repeat": "0 */4 * * *"
+      }, 
+      "schedule_every_5_hours": {
+	  "repeat": "0 */5 * * *"
+      },  
+      "schedule_Tuesday_10AM": {
+	  "repeat": "0 10 * * 2"
+      },   
+      "schedule_Tuesday_10:10AM": {
+	  "repeat": "10 10 * * 2"
+      }        
+  },
+
+  "SSID_profiles" : {
+      "MWireless_profile": {
+	  "SSID": "MWireless",
+	  "min_signal": -73
+      },
+
+      "EduRoam_profile": {
+	  "SSID": "eduroam",
+	  "min_signal": -70
+      }
+  }
+
+}
